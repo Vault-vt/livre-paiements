@@ -82,7 +82,7 @@
   .num-card .phone { font-weight: 700; font-size: 14.5px; }
   .num-card .label { color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
   .num-card .right { text-align: end; flex-shrink: 0; margin-inline-start: 12px; }
-  .balance { font-weight: 800; font-size: 16px; }
+  .balance { font-weight: 800; font-size: 16px; max-width: 100%; white-space: nowrap; overflow: hidden; display: block; }
   .balance.pos { color: var(--received); } .balance.neg { color: var(--paid); } .balance.zero { color: var(--ink-faint); }
   .num-card .when { color: var(--ink-faint); font-size: 11px; margin-top: 2px; }
 
@@ -162,35 +162,6 @@
 
   .pdf-intro { font-size: 12.5px; color: var(--ink-soft); background: var(--accent-soft); padding: 11px 13px; border-radius: 10px; margin-bottom: 14px; line-height: 1.6; }
   .export-btn { width: 100%; height: 48px; border: none; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; }
-  #printArea { display: none; }
-  @media print {
-    body > *:not(#printAreaWrap) { display: none !important; }
-    #printAreaWrap { display: block !important; position: absolute; inset: 0; padding: 24px; font-family: 'Tajawal', sans-serif; }
-    #printArea { display: block !important; }
-    .print-header { margin-bottom: 14px; border-bottom: 2px solid #2452C8; padding-bottom: 12px; }
-    .print-header h2 { margin: 0 0 4px; font-size: 21px; color: #14161C; }
-    .print-header .sub { font-size: 12.5px; color: #2452C8; font-weight: bold; margin-bottom: 2px; }
-    .print-header .meta { color: #676B76; font-size: 11.5px; line-height: 1.7; }
-    .pdf-summary { display: flex; gap: 10px; margin: 16px 0 18px; }
-    .pdf-card { flex: 1; border-radius: 10px; padding: 12px 8px; text-align: center; border: 1px solid rgba(0,0,0,0.06); }
-    .pdf-card.received { background: #E4F5EE; } .pdf-card.received .val { color: #12805C; }
-    .pdf-card.paid { background: #FBEAE6; } .pdf-card.paid .val { color: #C4432B; }
-    .pdf-card.net { background: #E9EEFC; } .pdf-card.net .val { color: #2452C8; }
-    .pdf-card .val { font-size: 16px; font-weight: 800; }
-    .pdf-card .lbl { font-size: 10px; color: #676B76; margin-top: 4px; font-weight: bold; }
-    .print-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .print-table th { background: #14161C; color: #fff; padding: 8px 9px; text-align: start; font-weight: bold; }
-    .print-table td { padding: 8px 9px; text-align: start; border-bottom: 1px solid #E4E6EC; }
-    .print-table tr.receive-row { background: #F3FBF7; border-inline-start: 3px solid #12805C; }
-    .print-table tr.pay-row { background: #FDF3F1; border-inline-start: 3px solid #C4432B; }
-    .print-table .amt-receive { color: #12805C; font-weight: bold; }
-    .print-table .amt-pay { color: #C4432B; font-weight: bold; }
-    .print-table .type-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: bold; }
-    .type-pill.receive-row { background: #12805C; color: #fff; }
-    .type-pill.pay-row { background: #C4432B; color: #fff; }
-    .print-footer { margin-top: 16px; text-align: end; font-weight: bold; font-size: 13px; color: #14161C; }
-  }
-  #printAreaWrap { display: none; }
 
   .lang-row { display: flex; gap: 8px; margin-bottom: 16px; }
   .lang-btn { flex: 1; padding: 14px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-elevated); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: var(--shadow); }
@@ -332,6 +303,7 @@
       <span id="mExportLabel"></span>
     </button>
 
+    <div class="section-label" data-i18n="history"></div>
     <div class="filter-count" id="mCount"></div>
     <div id="mList"></div>
     <div id="mEmpty" class="empty" style="display:none;">
@@ -475,8 +447,6 @@
 
 <button class="fab" id="fabBtn">+</button>
 
-<div id="printAreaWrap"><div id="printArea"></div></div>
-
 <!-- ADD / VIEW / EDIT TRANSACTION MODAL -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
@@ -505,7 +475,7 @@
           <button type="button" class="toggle-btn" id="btnPay">↑ <span data-i18n="paid"></span></button>
         </div>
       </div>
-      <div class="field"><label id="amountLabelEl"></label><input id="mAmount" type="number" inputmode="decimal" placeholder="0" min="0" step="0.01"></div>
+      <div class="field"><label id="amountLabelEl"></label><input id="mAmount" type="text" inputmode="decimal" placeholder="0"></div>
       <div class="field">
         <label data-i18n="appOrMethod"></label>
         <select id="mApp"></select>
@@ -826,6 +796,13 @@
     } catch (e) { alert(mapAuthError(e.code)); }
   });
 
+  $('mAmount').addEventListener('input', () => {
+    let v = $('mAmount').value.replace(/[^\d.]/g, '');
+    const firstDot = v.indexOf('.');
+    if (firstDot !== -1) { v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, ''); }
+    $('mAmount').value = v;
+  });
+
   async function init() {
     $('mDate').value = todayStr();
     document.getElementById('htmlRoot').setAttribute('lang', lang);
@@ -910,7 +887,7 @@
     // hidden reads a 0px width and would otherwise stay wrongly shrunk
     if (tab === 'tx') renderTxTab();
     if (tab === 'monthly') renderMonthTab();
-    if (tab === 'nums' && currentPhone) renderDetailTx(lastDetailRows);
+    if (tab === 'nums') { renderNumbersList(); if (currentPhone) renderDetailTx(lastDetailRows); }
   }
 
   function matchesFilters(row, f) {
@@ -992,6 +969,7 @@
       </div>`;
     }).join('');
     list.querySelectorAll('.num-card').forEach((el) => el.addEventListener('click', () => openDetail(el.dataset.id)));
+    list.querySelectorAll('.balance').forEach(fitText);
   }
 
   $('searchInput').addEventListener('input', () => {
@@ -1314,7 +1292,7 @@
     $('mCount').textContent = t('txCount', rows.length);
     if (rows.length === 0) { $('mList').innerHTML = ''; $('mEmpty').style.display = 'block'; return; }
     $('mEmpty').style.display = 'none';
-    $('mList').innerHTML = rows.slice(0, 7).map(rowHtml).join('') + moreFooterHtml(rows.length - 7);
+    $('mList').innerHTML = rows.map(rowHtml).join('');
     $('mList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, allTx.find(r => r.id === el.dataset.id))));
   }
   $('mPrevBtn').addEventListener('click', () => {
@@ -1382,9 +1360,9 @@
 
     const sums = computeSums(rows);
     const summaryHtml = `<div class="pdf-summary">
-      <div class="pdf-card received"><div class="val mono">${fmt(sums.received)}</div><div class="lbl">${t('received')}</div></div>
-      <div class="pdf-card paid"><div class="val mono">${fmt(sums.paid)}</div><div class="lbl">${t('paid')}</div></div>
-      <div class="pdf-card net"><div class="val mono">${sums.net >= 0 ? '+' : ''}${fmt(sums.net)}</div><div class="lbl">${t('netTotal')}</div></div>
+      <div class="pdf-card received"><span class="lbl">${t('received')}</span><span class="val mono">${fmt(sums.received)}</span></div>
+      <div class="pdf-card paid"><span class="lbl">${t('paid')}</span><span class="val mono">${fmt(sums.paid)}</span></div>
+      <div class="pdf-card net"><span class="lbl">${t('netTotal')}</span><span class="val mono">${sums.net >= 0 ? '+' : ''}${fmt(sums.net)}</span></div>
     </div>`;
 
     let bodyHtml;
@@ -1450,13 +1428,13 @@
   .print-header h2 { font-size: 20px; }
   .print-header .sub { font-size: 12.5px; color: #2452C8; font-weight: bold; margin: 4px 0 2px; }
   .print-header .meta { color: #676B76; font-size: 11.5px; line-height: 1.7; margin-top: 4px; }
-  .pdf-summary { display: flex; gap: 10px; margin: 16px 0 18px; }
-  .pdf-card { flex: 1; border-radius: 10px; padding: 12px 8px; text-align: center; border: 1px solid rgba(0,0,0,0.06); }
+  .pdf-summary { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 18px; }
+  .pdf-card { border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.06); }
   .pdf-card.received { background: #E4F5EE; } .pdf-card.received .val { color: #12805C; }
   .pdf-card.paid { background: #FBEAE6; } .pdf-card.paid .val { color: #C4432B; }
   .pdf-card.net { background: #E9EEFC; } .pdf-card.net .val { color: #2452C8; }
-  .pdf-card .val { font-size: 16px; font-weight: 800; }
-  .pdf-card .lbl { font-size: 10px; color: #676B76; margin-top: 4px; font-weight: bold; }
+  .pdf-card .val { font-size: 19px; font-weight: 800; max-width: 65%; white-space: nowrap; overflow: hidden; }
+  .pdf-card .lbl { font-size: 12px; color: #676B76; font-weight: bold; }
   .print-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .print-table th { background: #14161C; color: #fff; padding: 8px 9px; text-align: start; font-weight: bold; }
   .print-table td { padding: 8px 9px; text-align: start; border-bottom: 1px solid #E4E6EC; }
@@ -1491,6 +1469,15 @@
     </div>
     ${bodyHtml}
   </div>
+  <script>
+    document.querySelectorAll('.pdf-card .val').forEach(function (el) {
+      var size = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > el.clientWidth && size > 12) {
+        size -= 1;
+        el.style.fontSize = size + 'px';
+      }
+    });
+  <\/script>
 </body>
 </html>`;
     w.document.open();
