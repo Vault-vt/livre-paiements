@@ -906,6 +906,11 @@
     $('numsTabView').style.display = tab === 'nums' ? 'block' : 'none';
     $('pdfTabView').style.display = tab === 'pdf' ? 'block' : 'none';
     $('settingsTabView').style.display = tab === 'settings' ? 'block' : 'none';
+    // re-measure now that the tab is actually visible — a card painted while
+    // hidden reads a 0px width and would otherwise stay wrongly shrunk
+    if (tab === 'tx') renderTxTab();
+    if (tab === 'monthly') renderMonthTab();
+    if (tab === 'nums' && currentPhone) renderDetailTx(lastDetailRows);
   }
 
   function matchesFilters(row, f) {
@@ -924,10 +929,8 @@
   function fitText(el) {
     if (!el) return;
     el.style.fontSize = '';
-    const cs = getComputedStyle(el);
-    let size = parseFloat(cs.fontSize);
-    const maxWidth = el.parentElement.clientWidth * (parseFloat(cs.maxWidth) / 100 || 0.7);
-    while (el.scrollWidth > maxWidth && size > 12) {
+    let size = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > el.clientWidth && size > 11) {
       size -= 1;
       el.style.fontSize = size + 'px';
     }
@@ -958,7 +961,7 @@
     return `<div class="tx-row" data-id="${r.id}">
       <div class="tx-left">
         <div class="tx-app-row"><span class="tx-app">${escapeHtml(appLabel(r.app) || r.app)}</span><span class="tx-number mono">${escapeHtml(r.display || r.number || '')}</span></div>
-        <div class="tx-meta mono">${dateFmtDisplay(r.date)}</div>
+        <div class="tx-meta"><span class="mono">${dateFmtDisplay(r.date)}</span></div>
         ${r.note ? `<div class="tx-note">${escapeHtml(r.note)}</div>` : ''}
         <span class="tx-tag ${isReceive ? 'receive' : 'pay'}">${isReceive ? t('received') : t('paid')}</span>
       </div>
@@ -985,7 +988,7 @@
       const when = n.lastAt ? dateFmtDisplay(new Date(n.lastAt).toISOString().slice(0,10)) : '';
       return `<div class="num-card" data-id="${id}">
         <div class="left"><div class="phone mono">${n.display || id}</div><div class="label">${n.label ? escapeHtml(n.label) : t('txCount', n.count || 0)}</div></div>
-        <div class="right"><div class="balance mono ${cls}">${bal > 0 ? '+' : ''}${fmt(bal)}</div><div class="when mono">${when}</div></div>
+        <div class="right"><div class="balance ${cls}"><span class="mono">${bal > 0 ? '+' : ''}${fmt(bal)}</span></div><div class="when"><span class="mono">${when}</span></div></div>
       </div>`;
     }).join('');
     list.querySelectorAll('.num-card').forEach((el) => el.addEventListener('click', () => openDetail(el.dataset.id)));
@@ -1035,7 +1038,7 @@
       return `<div class="tx-row" data-id="${r.id}">
         <div class="tx-left">
           <div class="tx-app">${escapeHtml(appLabel(r.app) || r.app)}</div>
-          <div class="tx-meta mono">${dateFmtDisplay(r.date)}</div>
+          <div class="tx-meta"><span class="mono">${dateFmtDisplay(r.date)}</span></div>
           ${r.note ? `<div class="tx-note">${escapeHtml(r.note)}</div>` : ''}
           <span class="tx-tag ${isReceive ? 'receive' : 'pay'}">${isReceive ? t('received') : t('paid')}</span>
         </div>
