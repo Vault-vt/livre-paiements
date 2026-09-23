@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#2452C8">
 <style>
   :root {
@@ -32,8 +33,8 @@
     --received: #3FBE8E; --received-soft: #132420; --paid: #E58269; --paid-soft: #2A1917;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
   }
-  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
-  html, body { height: 100%; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); overscroll-behavior-y: contain; }
+  html, body { height: 100%; overscroll-behavior-y: contain; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Tajawal', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
   .mono { font-family: 'Space Mono', monospace; direction: ltr; unicode-bidi: embed; display: inline-block; }
@@ -361,6 +362,9 @@
       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h9l3 3v4"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
       <span data-i18n="exportBtn"></span>
     </button>
+    <div class="section-label" data-i18n="tabTransactions"></div>
+    <div id="pfPreviewList"></div>
+    <div id="pfPreviewEmpty" class="empty" style="display:none;"><div class="big" data-i18n="noTransactions"></div></div>
   </div>
 
   <!-- SETTINGS TAB -->
@@ -770,6 +774,9 @@
     translateAll();
     updateAuthUI();
     db = firebase.firestore();
+    // Offline persistence: once signed in, whatever's already been synced stays
+    // readable from local cache with no connection — same as the other apps.
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
@@ -777,12 +784,22 @@
         $('authScreen').style.display = 'none';
         $('accountEmail').textContent = user.email || '';
         setConn(true, 'connected');
+        // Fresh session, even if this is a different account signing in on the
+        // same device right after another one signed out: don't carry over
+        // whatever tab or leftover message the previous account left behind.
+        $('resetPwMsg').classList.remove('show');
+        currentPhone = null;
+        switchTab('tx');
         subscribeNumbers();
         subscribeAllTx();
       } else {
         myId = null;
         if (unsubNumbers) { unsubNumbers(); unsubNumbers = null; }
         if (unsubAllTx) { unsubAllTx(); unsubAllTx = null; }
+        if (unsubDetailTx) { unsubDetailTx(); unsubDetailTx = null; }
+        $('modalBackdrop').classList.remove('show');
+        $('numModalBackdrop').classList.remove('show');
+        $('resetPwMsg').classList.remove('show');
         $('authScreen').style.display = 'flex';
         $('authEmail').value = ''; $('authPassword').value = ''; $('authPasswordConfirm').value = '';
         $('authPassword').type = 'password'; $('authPasswordConfirm').type = 'password';
@@ -822,6 +839,7 @@
   $('tabSettings').addEventListener('click', () => switchTab('settings'));
   function switchTab(tab) {
     if (tab !== 'nums' && currentPhone) { leaveNumberDetail(); }
+    if (tab !== 'settings') { $('resetPwMsg').classList.remove('show'); }
     ['tx','nums','pdf','settings'].forEach((k) => $('tab' + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', k === tab));
     $('txTabView').style.display = tab === 'tx' ? 'block' : 'none';
     $('numsTabView').style.display = tab === 'nums' ? 'block' : 'none';
@@ -1194,6 +1212,13 @@
     const f = currentPdfFilters();
     const rows = allTx.filter((r) => matchesFilters(r, f));
     $('pfCount').textContent = t('txCount', rows.length);
+    if (rows.length === 0) {
+      $('pfPreviewList').innerHTML = '';
+      $('pfPreviewEmpty').style.display = 'block';
+      return;
+    }
+    $('pfPreviewEmpty').style.display = 'none';
+    $('pfPreviewList').innerHTML = rows.slice(0, 7).map(rowHtml).join('') + moreFooterHtml(rows.length - 7);
   }
   $('pfNumber').addEventListener('input', renderPdfCount);
   $('pfType').addEventListener('change', renderPdfCount);
