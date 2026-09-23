@@ -112,12 +112,15 @@
   .tx-tag { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 700; }
   .tx-tag.receive { background: var(--received-soft); color: var(--received); }
   .tx-tag.pay { background: var(--paid-soft); color: var(--paid); }
+  .list-more-note { text-align: center; padding: 10px 4px; font-size: 11.5px; font-weight: 700; color: var(--ink-faint); border-top: 1px solid var(--line); }
 
   .fab { position: fixed; inset-inline-end: 18px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); border: none; font-size: 27px; box-shadow: var(--shadow); cursor: pointer; z-index: 30; display: flex; align-items: center; justify-content: center; line-height: 1; }
   .modal-backdrop { position: fixed; inset: 0; background: rgba(10,11,15,0.5); z-index: 40; display: none; align-items: flex-end; justify-content: center; }
   .modal-backdrop.show { display: flex; }
   .modal { background: var(--bg-elevated); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 10px 18px calc(22px + env(safe-area-inset-bottom, 0px)); max-height: 88vh; overflow-y: auto; }
   .modal-top { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; margin-bottom: 8px; }
+  .modal-drag-zone { cursor: grab; touch-action: none; }
+  .modal-drag-zone h2 { touch-action: none; }
   .modal-handle { grid-column: 2; justify-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--line); cursor: grab; padding: 10px 20px; margin: -10px -20px; background-clip: content-box; touch-action: none; }
   .modal.dragging { transition: none !important; }
   .modal-close-x { grid-column: 3; justify-self: end; width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--bg); color: var(--ink-soft); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -209,6 +212,10 @@
   .auth-field { margin-bottom: 12px; }
   .auth-field label { display: block; font-size: 12px; color: var(--ink-soft); margin-bottom: 5px; font-weight: 700; }
   .auth-field input { width: 100%; padding: 12px 13px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-elevated); color: var(--ink); font-size: 14.5px; font-family: inherit; user-select: text; }
+  .pw-field-wrap { position: relative; }
+  .pw-field-wrap input { padding-inline-end: 42px; }
+  .pw-eye-btn { position: absolute; inset-inline-end: 4px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border: none; background: none; color: var(--ink-faint); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+  .pw-eye-btn:hover { background: var(--bg); color: var(--ink-soft); }
   .auth-btn { width: 100%; padding: 13px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-size: 14.5px; font-weight: 700; margin-top: 8px; cursor: pointer; font-family: inherit; }
   .auth-btn:disabled { opacity: 0.6; }
   .auth-switch { text-align: center; font-size: 12.5px; color: var(--ink-soft); margin-top: 16px; }
@@ -221,6 +228,7 @@
   .account-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
   .account-row .email { font-size: 13px; color: var(--ink-soft); }
   .signout-btn { padding: 9px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--paid); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .reset-pw-btn { width: 100%; margin-top: 16px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--accent); font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
 </style>
 </head>
 <body>
@@ -368,6 +376,8 @@
         <button class="lang-btn" id="langFr">Français</button>
         <button class="lang-btn" id="langEn">English</button>
       </div>
+      <button class="reset-pw-btn" id="resetPwBtn" data-i18n="resetPassword"></button>
+      <div class="auth-msg" id="resetPwMsg"></div>
     </div>
   </div>
 </div>
@@ -382,7 +392,20 @@
     <div class="auth-msg" id="authMsg"></div>
     <div class="auth-field" id="authNameField" style="display:none;"></div>
     <div class="auth-field"><label data-i18n="authEmail"></label><input type="email" id="authEmail" autocomplete="email"></div>
-    <div class="auth-field"><label data-i18n="authPassword"></label><input type="password" id="authPassword" autocomplete="current-password"></div>
+    <div class="auth-field">
+      <label data-i18n="authPassword"></label>
+      <div class="pw-field-wrap">
+        <input type="password" id="authPassword" autocomplete="current-password">
+        <button type="button" class="pw-eye-btn" id="authPwEye" aria-label="toggle password visibility"></button>
+      </div>
+    </div>
+    <div class="auth-field" id="authConfirmField" style="display:none;">
+      <label data-i18n="authConfirmPassword"></label>
+      <div class="pw-field-wrap">
+        <input type="password" id="authPasswordConfirm" autocomplete="new-password">
+        <button type="button" class="pw-eye-btn" id="authPwConfirmEye" aria-label="toggle password visibility"></button>
+      </div>
+    </div>
     <button class="auth-btn" id="authSubmitBtn"></button>
     <div class="auth-forgot" id="authForgot" data-i18n="authForgot"></div>
     <div class="auth-switch" id="authSwitchLine"></div>
@@ -396,8 +419,10 @@
 <!-- ADD / VIEW / EDIT TRANSACTION MODAL -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
-    <div class="modal-top"><span class="modal-handle" id="txHandle"></span><button class="modal-close-x" id="txCloseX">✕</button></div>
-    <h2 id="txModalTitle"></h2>
+    <div class="modal-drag-zone" id="txDragZone">
+      <div class="modal-top"><span class="modal-handle" id="txHandle"></span><button class="modal-close-x" id="txCloseX">✕</button></div>
+      <h2 id="txModalTitle"></h2>
+    </div>
 
     <div id="txViewBlock" style="display:none;"></div>
 
@@ -450,8 +475,10 @@
 <!-- VIEW / EDIT NUMBER MODAL -->
 <div class="modal-backdrop" id="numModalBackdrop">
   <div class="modal">
-    <div class="modal-top"><span class="modal-handle" id="numHandle"></span><button class="modal-close-x" id="numCloseX">✕</button></div>
-    <h2 id="numModalTitle"></h2>
+    <div class="modal-drag-zone" id="numDragZone">
+      <div class="modal-top"><span class="modal-handle" id="numHandle"></span><button class="modal-close-x" id="numCloseX">✕</button></div>
+      <h2 id="numModalTitle"></h2>
+    </div>
 
     <div id="numViewBlock" style="display:none;"></div>
 
@@ -520,13 +547,13 @@
       numberNamePlaceholder:'مثال: أحمد - المتجر', deleteNumberBtn:'حذف هذا الرقم وكل معاملاته',
       exportBtn:'تصدير / طباعة PDF', pdfIntroTxt:'اختر الفلاتر ثم اضغط تصدير — سيفتح مربع الطباعة في هاتفك، اختر "حفظ كملف PDF".',
       pdfNoResults:'لا توجد معاملات مطابقة للفلاتر', settingsLanguage:'اللغة',
-      cashLabel:'نقداً', otherLabel:'أخرى', txCountVal:'عدد المعاملات', notSet:'—',
-      authEmail:'البريد الإلكتروني', authPassword:'كلمة المرور', authForgot:'نسيت كلمة المرور؟',
+      cashLabel:'نقداً', otherLabel:'أخرى', more:'أخرى', txCountVal:'عدد المعاملات', notSet:'—',
+      authEmail:'البريد الإلكتروني', authPassword:'كلمة المرور', authConfirmPassword:'تأكيد كلمة المرور', authForgot:'نسيت كلمة المرور؟',
       authSignInTitle:'تسجيل الدخول', authSignUpTitle:'إنشاء حساب', authSignIn:'تسجيل الدخول', authCreateAccount:'إنشاء حساب',
       authNoAccount:'ليس لديك حساب؟', authHaveAccount:'لديك حساب بالفعل؟', authResetSent:'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.',
-      authEnterEmailFirst:'أدخل بريدك الإلكتروني أولاً.', signOut:'تسجيل الخروج',
+      authEnterEmailFirst:'أدخل بريدك الإلكتروني أولاً.', signOut:'تسجيل الخروج', resetPassword:'تغيير كلمة المرور', resetPwSent:'تم إرسال رابط تغيير كلمة المرور إلى بريدك الإلكتروني.',
       errInvalidEmail:'البريد الإلكتروني غير صالح.', errUserNotFound:'لا يوجد حساب بهذا البريد.', errWrongPassword:'كلمة المرور غير صحيحة.',
-      errEmailInUse:'هذا البريد مستخدم بالفعل.', errWeakPassword:'كلمة المرور ضعيفة جدًا (6 أحرف على الأقل).', errTooManyRequests:'محاولات كثيرة، حاول لاحقًا.', errGeneric:'حدث خطأ. حاول مرة أخرى.',
+      errEmailInUse:'هذا البريد مستخدم بالفعل.', errWeakPassword:'كلمة المرور ضعيفة جدًا (6 أحرف على الأقل).', errTooManyRequests:'محاولات كثيرة، حاول لاحقًا.', errGeneric:'حدث خطأ. حاول مرة أخرى.', errPasswordMismatch:'كلمتا المرور غير متطابقتين.',
       printTitle:'سجل المدفوعات', printGenerated:'أُنشئ في', printFilters:'الفلاتر', printNone:'بدون', printCount:function(n){return n+' معاملة';},
       colDate:'التاريخ', colNumber:'الرقم', colApp:'التطبيق', colType:'النوع', colAmount:'المبلغ', colNote:'ملاحظة' },
     fr: { dir:'ltr', appTitle:'Livre des Paiements', connecting:'Connexion…', connected:'Connecté', connError:'Erreur de connexion', noStorage:'Stockage indisponible dans cet aperçu',
@@ -548,13 +575,13 @@
       numberNamePlaceholder:'ex. Ahmed - boutique', deleteNumberBtn:'Supprimer ce numéro et toutes ses transactions',
       exportBtn:'Exporter / Imprimer en PDF', pdfIntroTxt:"Choisissez les filtres puis appuyez sur exporter — la boîte d'impression de votre téléphone s'ouvrira, choisissez « Enregistrer en PDF ».",
       pdfNoResults:'Aucune transaction ne correspond aux filtres', settingsLanguage:'Langue',
-      cashLabel:'Espèces', otherLabel:'Autre', txCountVal:'Nombre de transactions', notSet:'—',
-      authEmail:'E-mail', authPassword:'Mot de passe', authForgot:'Mot de passe oublié ?',
+      cashLabel:'Espèces', otherLabel:'Autre', more:'de plus', txCountVal:'Nombre de transactions', notSet:'—',
+      authEmail:'E-mail', authPassword:'Mot de passe', authConfirmPassword:'Confirmer le mot de passe', authForgot:'Mot de passe oublié ?',
       authSignInTitle:'Connexion', authSignUpTitle:'Créer un compte', authSignIn:'Se connecter', authCreateAccount:'Créer un compte',
       authNoAccount:"Pas encore de compte ?", authHaveAccount:'Déjà un compte ?', authResetSent:'Un lien de réinitialisation a été envoyé à votre e-mail.',
-      authEnterEmailFirst:"Entrez d'abord votre e-mail.", signOut:'Déconnexion',
+      authEnterEmailFirst:"Entrez d'abord votre e-mail.", signOut:'Déconnexion', resetPassword:'Changer le mot de passe', resetPwSent:'Un lien de changement de mot de passe a été envoyé à votre e-mail.',
       errInvalidEmail:'E-mail invalide.', errUserNotFound:'Aucun compte avec cet e-mail.', errWrongPassword:'Mot de passe incorrect.',
-      errEmailInUse:'Cet e-mail est déjà utilisé.', errWeakPassword:'Mot de passe trop faible (6 caractères minimum).', errTooManyRequests:'Trop de tentatives, réessayez plus tard.', errGeneric:'Une erreur est survenue. Réessayez.',
+      errEmailInUse:'Cet e-mail est déjà utilisé.', errWeakPassword:'Mot de passe trop faible (6 caractères minimum).', errTooManyRequests:'Trop de tentatives, réessayez plus tard.', errGeneric:'Une erreur est survenue. Réessayez.', errPasswordMismatch:'Les mots de passe ne correspondent pas.',
       printTitle:'Livre des Paiements', printGenerated:'Généré le', printFilters:'Filtres', printNone:'Aucun', printCount:function(n){return n+' transaction'+(n!==1?'s':'');},
       colDate:'Date', colNumber:'Numéro', colApp:'Application', colType:'Type', colAmount:'Montant', colNote:'Note' },
     en: { dir:'ltr', appTitle:'Payment Ledger', connecting:'Connecting…', connected:'Connected', connError:'Connection error', noStorage:'Storage unavailable in this preview',
@@ -576,13 +603,13 @@
       numberNamePlaceholder:'e.g. Ahmed - shop', deleteNumberBtn:'Delete this number and all its transactions',
       exportBtn:'Export / Print to PDF', pdfIntroTxt:"Pick your filters, then tap export — your phone's print dialog will open; choose 'Save as PDF'.",
       pdfNoResults:'No transactions match these filters', settingsLanguage:'Language',
-      cashLabel:'Cash', otherLabel:'Other', txCountVal:'Number of transactions', notSet:'—',
-      authEmail:'Email', authPassword:'Password', authForgot:'Forgot password?',
+      cashLabel:'Cash', otherLabel:'Other', more:'more', txCountVal:'Number of transactions', notSet:'—',
+      authEmail:'Email', authPassword:'Password', authConfirmPassword:'Confirm password', authForgot:'Forgot password?',
       authSignInTitle:'Sign in', authSignUpTitle:'Create account', authSignIn:'Sign in', authCreateAccount:'Create account',
       authNoAccount:"Don't have an account?", authHaveAccount:'Already have an account?', authResetSent:'A reset link has been sent to your email.',
-      authEnterEmailFirst:'Enter your email first.', signOut:'Sign out',
+      authEnterEmailFirst:'Enter your email first.', signOut:'Sign out', resetPassword:'Change password', resetPwSent:'A password-change link has been sent to your email.',
       errInvalidEmail:'That email looks invalid.', errUserNotFound:'No account with that email.', errWrongPassword:'Wrong password.',
-      errEmailInUse:'That email is already in use.', errWeakPassword:'Password too weak (6 characters minimum).', errTooManyRequests:'Too many attempts, try again later.', errGeneric:'Something went wrong. Try again.',
+      errEmailInUse:'That email is already in use.', errWeakPassword:'Password too weak (6 characters minimum).', errTooManyRequests:'Too many attempts, try again later.', errGeneric:'Something went wrong. Try again.', errPasswordMismatch:'Passwords do not match.',
       printTitle:'Payment Ledger', printGenerated:'Generated on', printFilters:'Filters', printNone:'None', printCount:function(n){return n+' transaction'+(n!==1?'s':'');},
       colDate:'Date', colNumber:'Number', colApp:'App', colType:'Type', colAmount:'Amount', colNote:'Note' }
   };
@@ -614,6 +641,19 @@
   const ICN_NOTE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>';
   const ICN_TAG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 0-2.82Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>';
   const ICN_HASH = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>';
+  const ICN_EYE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const ICN_EYE_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.29 20.29 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a20.29 20.29 0 0 1-3.22 4.5M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  function setupPasswordToggle(inputId, btnId) {
+    const input = $(inputId), btn = $(btnId);
+    btn.innerHTML = ICN_EYE;
+    btn.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.innerHTML = show ? ICN_EYE_OFF : ICN_EYE;
+    });
+  }
+  setupPasswordToggle('authPassword', 'authPwEye');
+  setupPasswordToggle('authPasswordConfirm', 'authPwConfirmEye');
 
   let connKey = 'connecting';
   function setConn(ok, key) { $('connDot').classList.toggle('on', ok); connKey = key; $('connText').textContent = t(key); }
@@ -648,6 +688,7 @@
     ['langAr','langFr','langEn'].forEach((id) => $(id).classList.remove('active'));
     $('lang' + lang[0].toUpperCase() + lang.slice(1)).classList.add('active');
     updateAuthUI();
+    $('backBtn').textContent = DICT[lang].dir === 'rtl' ? '→' : '←';
   }
 
   function applyLanguage(l) {
@@ -676,9 +717,11 @@
       ? escapeHtml(t('authNoAccount')) + ' <a id="authSwitchLink">' + escapeHtml(t('authCreateAccount')) + '</a>'
       : escapeHtml(t('authHaveAccount')) + ' <a id="authSwitchLink">' + escapeHtml(t('authSignIn')) + '</a>';
     $('authForgot').style.display = authMode === 'signin' ? 'block' : 'none';
+    $('authConfirmField').style.display = authMode === 'signup' ? 'block' : 'none';
     $('authSwitchLink').addEventListener('click', () => {
       authMode = authMode === 'signin' ? 'signup' : 'signin';
       $('authErr').classList.remove('show'); $('authMsg').classList.remove('show');
+      $('authPasswordConfirm').value = '';
       updateAuthUI();
     });
   }
@@ -687,6 +730,10 @@
     const pass = $('authPassword').value;
     $('authErr').classList.remove('show'); $('authMsg').classList.remove('show');
     if (!email || !pass) { $('authErr').textContent = t('errGeneric'); $('authErr').classList.add('show'); return; }
+    if (authMode === 'signup') {
+      const confirm = $('authPasswordConfirm').value;
+      if (pass !== confirm) { $('authErr').textContent = t('errPasswordMismatch'); $('authErr').classList.add('show'); return; }
+    }
     $('authSubmitBtn').disabled = true;
     try {
       if (authMode === 'signin') { await firebase.auth().signInWithEmailAndPassword(email, pass); }
@@ -705,6 +752,16 @@
     } catch (e) { $('authErr').textContent = mapAuthError(e.code); $('authErr').classList.add('show'); }
   });
   $('signOutBtn').addEventListener('click', () => firebase.auth().signOut());
+  $('resetPwBtn').addEventListener('click', async () => {
+    const user = firebase.auth().currentUser;
+    if (!user || !user.email) return;
+    $('resetPwMsg').classList.remove('show');
+    try {
+      await firebase.auth().sendPasswordResetEmail(user.email);
+      $('resetPwMsg').textContent = t('resetPwSent');
+      $('resetPwMsg').classList.add('show');
+    } catch (e) { alert(mapAuthError(e.code)); }
+  });
 
   async function init() {
     $('mDate').value = todayStr();
@@ -727,7 +784,9 @@
         if (unsubNumbers) { unsubNumbers(); unsubNumbers = null; }
         if (unsubAllTx) { unsubAllTx(); unsubAllTx = null; }
         $('authScreen').style.display = 'flex';
-        $('authEmail').value = ''; $('authPassword').value = '';
+        $('authEmail').value = ''; $('authPassword').value = ''; $('authPasswordConfirm').value = '';
+        $('authPassword').type = 'password'; $('authPasswordConfirm').type = 'password';
+        $('authPwEye').innerHTML = ICN_EYE; $('authPwConfirmEye').innerHTML = ICN_EYE;
         $('authErr').classList.remove('show'); $('authMsg').classList.remove('show');
       }
     });
@@ -762,6 +821,7 @@
   $('tabPdf').addEventListener('click', () => switchTab('pdf'));
   $('tabSettings').addEventListener('click', () => switchTab('settings'));
   function switchTab(tab) {
+    if (tab !== 'nums' && currentPhone) { leaveNumberDetail(); }
     ['tx','nums','pdf','settings'].forEach((k) => $('tab' + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', k === tab));
     $('txTabView').style.display = tab === 'tx' ? 'block' : 'none';
     $('numsTabView').style.display = tab === 'nums' ? 'block' : 'none';
@@ -789,6 +849,9 @@
     $(prefix + 'Net').textContent = (s.net >= 0 ? '+' : '') + fmt(s.net);
   }
   function currentTxFilters() { return { number: sanitizeId($('txfNumber').value), type: $('txfType').value, app: $('txfApp').value, from: $('txfFrom').value, to: $('txfTo').value }; }
+  function moreFooterHtml(remaining) {
+    return remaining > 0 ? `<div class="list-more-note">+ ${remaining} ${t('more')}</div>` : '';
+  }
   function renderTxTab() {
     const f = currentTxFilters();
     const rows = allTx.filter((r) => matchesFilters(r, f));
@@ -796,7 +859,7 @@
     paintSums('txSum', rows);
     if (rows.length === 0) { $('txAllList').innerHTML = ''; $('txEmpty').style.display = 'block'; return; }
     $('txEmpty').style.display = 'none';
-    $('txAllList').innerHTML = rows.map(rowHtml).join('');
+    $('txAllList').innerHTML = rows.slice(0, 7).map(rowHtml).join('') + moreFooterHtml(rows.length - 7);
     $('txAllList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, allTx.find(r => r.id === el.dataset.id))));
   }
   function rowHtml(r) {
@@ -876,7 +939,7 @@
     $('detCount').textContent = t('txCount', filtered.length);
     if (filtered.length === 0) { $('txList').innerHTML = ''; $('txDetailEmpty').style.display = 'block'; return; }
     $('txDetailEmpty').style.display = 'none';
-    $('txList').innerHTML = filtered.map((r) => {
+    $('txList').innerHTML = filtered.slice(0, 7).map((r) => {
       const isReceive = r.type === 'receive';
       return `<div class="tx-row" data-id="${r.id}">
         <div class="tx-left">
@@ -887,7 +950,7 @@
         </div>
         <div class="tx-right"><div class="tx-amt mono ${isReceive ? 'receive' : 'pay'}">${isReceive ? '+' : '−'}${fmt(r.amount || 0)}</div><span class="tx-chevron">${CHEVRON}</span></div>
       </div>`;
-    }).join('');
+    }).join('') + moreFooterHtml(filtered.length - 7);
     $('txList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, filtered.find(r => r.id === el.dataset.id))));
   }
   $('dfType').addEventListener('change', () => renderDetailTx(lastDetailRows));
@@ -898,12 +961,13 @@
 
 
 
-  $('backBtn').addEventListener('click', () => {
+  function leaveNumberDetail() {
     if (unsubDetailTx) { unsubDetailTx(); unsubDetailTx = null; }
     currentPhone = null;
     $('numsDetailPane').style.display = 'none';
     $('numsListPane').style.display = 'block';
-  });
+  }
+  $('backBtn').addEventListener('click', leaveNumberDetail);
 
   // ===== NUMBER MODAL =====
   function renderNumViewBlock(id, n) {
@@ -1169,7 +1233,7 @@
 
     let bodyHtml;
     if (rows.length === 0) {
-      bodyHtml = summaryHtml + `<p>${escapeHtml(t('pdfNoResults'))}</p>`;
+      bodyHtml = summaryHtml + `<p class="empty-msg">${escapeHtml(t('pdfNoResults'))}</p>`;
     } else {
       const headCols = isSingle
         ? `<th>${t('colDate')}</th><th>${t('colApp')}</th><th>${t('colType')}</th><th>${t('colAmount')}</th><th>${t('colNote')}</th>`
@@ -1191,48 +1255,152 @@
       <div class="print-footer">${t('printCount', rows.length)}</div>`;
     }
 
-    $('printArea').innerHTML = `<div class="print-header">
-      <h2>${titleHtml}</h2>${subHtml}
-      <div class="meta">${t('printGenerated')}: ${genStr}<br>${t('printFilters')}: ${escapeHtml(filtersTxt)}</div>
-    </div>${bodyHtml}`;
-    window.print();
+    openPdfDoc({ titleHtml, subHtml, genStr, filtersTxt, bodyHtml });
   });
 
-  // ===== drag-to-dismiss on modal handles =====
-  function setupDragToClose(handleId, backdropId, closeFn) {
-    const handle = $(handleId);
+  // Opens the export as a standalone document in its own real browser tab —
+  // own <html dir>, own font load, nothing from the live app underneath to
+  // hide or fight with. The person taps the Print/Save button themselves
+  // once they can see the page actually rendered, instead of the print
+  // dialog firing blind on top of the live app.
+  function openPdfDoc({ titleHtml, subHtml, genStr, filtersTxt, bodyHtml }) {
+    const w = window.open('', '_blank');
+    if (!w) { alert(t('errGeneric')); return; }
+    const dir = DICT[lang].dir;
+    const html = `<!DOCTYPE html>
+<html dir="${dir}" lang="${lang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${titleHtml}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: text; user-select: text; }
+  body { font-family: 'Tajawal', sans-serif; background: #EEF0F4; color: #14161C; padding: 0 0 60px; }
+  .mono { font-family: 'Space Mono', monospace; direction: ltr; unicode-bidi: embed; display: inline-block; }
+  .topbar {
+    position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid #E4E6EC;
+  }
+  .topbar button {
+    height: 38px; border: none; border-radius: 10px; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer;
+  }
+  .topbar .close-btn { width: 38px; background: #fff; border: 1px solid #E4E6EC; color: #676B76; }
+  .topbar .print-btn { padding: 0 18px; background: #2452C8; color: #fff; display: flex; align-items: center; gap: 7px; }
+  .doc { max-width: 640px; margin: 18px auto 0; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(20,22,28,0.08); padding: 24px 22px; }
+  .print-header { margin-bottom: 14px; border-bottom: 2px solid #2452C8; padding-bottom: 12px; }
+  .print-header h2 { font-size: 20px; }
+  .print-header .sub { font-size: 12.5px; color: #2452C8; font-weight: bold; margin: 4px 0 2px; }
+  .print-header .meta { color: #676B76; font-size: 11.5px; line-height: 1.7; margin-top: 4px; }
+  .pdf-summary { display: flex; gap: 10px; margin: 16px 0 18px; }
+  .pdf-card { flex: 1; border-radius: 10px; padding: 12px 8px; text-align: center; border: 1px solid rgba(0,0,0,0.06); }
+  .pdf-card.received { background: #E4F5EE; } .pdf-card.received .val { color: #12805C; }
+  .pdf-card.paid { background: #FBEAE6; } .pdf-card.paid .val { color: #C4432B; }
+  .pdf-card.net { background: #E9EEFC; } .pdf-card.net .val { color: #2452C8; }
+  .pdf-card .val { font-size: 16px; font-weight: 800; }
+  .pdf-card .lbl { font-size: 10px; color: #676B76; margin-top: 4px; font-weight: bold; }
+  .print-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .print-table th { background: #14161C; color: #fff; padding: 8px 9px; text-align: start; font-weight: bold; }
+  .print-table td { padding: 8px 9px; text-align: start; border-bottom: 1px solid #E4E6EC; }
+  .print-table tr.receive-row { background: #F3FBF7; border-inline-start: 3px solid #12805C; }
+  .print-table tr.pay-row { background: #FDF3F1; border-inline-start: 3px solid #C4432B; }
+  .print-table .amt-receive { color: #12805C; font-weight: bold; }
+  .print-table .amt-pay { color: #C4432B; font-weight: bold; }
+  .type-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: bold; color: #fff; }
+  .type-pill.receive-row { background: #12805C; } .type-pill.pay-row { background: #C4432B; }
+  .print-footer { margin-top: 16px; text-align: end; font-weight: bold; font-size: 13px; }
+  .empty-msg { padding: 30px 0; text-align: center; color: #676B76; }
+  @media print {
+    .topbar { display: none !important; }
+    body { background: #fff; padding: 0; }
+    .doc { box-shadow: none; margin: 0; max-width: 100%; border-radius: 0; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="close-btn" onclick="window.close()">✕</button>
+    <button class="print-btn" onclick="window.print()">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h9l3 3v4"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+      ${escapeHtml(t('exportBtn'))}
+    </button>
+  </div>
+  <div class="doc">
+    <div class="print-header">
+      <h2>${titleHtml}</h2>${subHtml}
+      <div class="meta">${t('printGenerated')}: ${genStr}<br>${t('printFilters')}: ${escapeHtml(filtersTxt)}</div>
+    </div>
+    ${bodyHtml}
+  </div>
+</body>
+</html>`;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
+
+  // ===== drag-to-dismiss on modal header (handle + title), touch-based =====
+  // Mirrors the pattern already proven in the other apps: real touchstart/
+  // touchmove/touchend (not pointer events) on the whole header block, not
+  // just the thin handle bar, so it's actually easy to grab. A plain tap
+  // (no real drag) is left alone so the ✕ button's own click still fires.
+  function setupDragToClose(zoneId, backdropId, closeFn) {
+    const zone = $(zoneId);
     const backdrop = $(backdropId);
     const modalEl = backdrop.querySelector('.modal');
     let startY = 0, dy = 0, dragging = false;
-    handle.addEventListener('pointerdown', (e) => {
-      dragging = true; startY = e.clientY; dy = 0;
-      modalEl.classList.add('dragging');
-      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
-    });
-    handle.addEventListener('pointermove', (e) => {
+
+    zone.addEventListener('touchstart', (e) => {
+      dragging = true; startY = e.touches[0].clientY; dy = 0;
+      modalEl.style.transition = 'none';
+    }, { passive: true });
+
+    zone.addEventListener('touchmove', (e) => {
       if (!dragging) return;
-      dy = Math.max(0, e.clientY - startY);
+      dy = Math.max(0, e.touches[0].clientY - startY);
       modalEl.style.transform = 'translateY(' + dy + 'px)';
-    });
-    function endDrag() {
+    }, { passive: false });
+
+    function endDrag(e) {
       if (!dragging) return;
       dragging = false;
-      modalEl.classList.remove('dragging');
-      if (dy > 110) {
-        modalEl.style.transition = 'transform 0.2s ease';
+      modalEl.style.transition = 'transform 0.22s ease';
+      if (dy > 5 && e && e.cancelable) e.preventDefault();
+      if (dy > 90) {
         modalEl.style.transform = 'translateY(100%)';
-        setTimeout(() => { modalEl.style.transform = ''; modalEl.style.transition = ''; closeFn(); }, 190);
+        setTimeout(() => { modalEl.style.transform = ''; modalEl.style.transition = ''; closeFn(); }, 200);
       } else {
-        modalEl.style.transition = 'transform 0.2s ease';
         modalEl.style.transform = '';
-        setTimeout(() => { modalEl.style.transition = ''; }, 210);
+        setTimeout(() => { modalEl.style.transition = ''; }, 220);
       }
+      dy = 0;
     }
-    handle.addEventListener('pointerup', endDrag);
-    handle.addEventListener('pointercancel', endDrag);
+    zone.addEventListener('touchend', endDrag, { passive: false });
+    zone.addEventListener('touchcancel', endDrag, { passive: false });
   }
-  setupDragToClose('txHandle', 'modalBackdrop', closeModal);
-  setupDragToClose('numHandle', 'numModalBackdrop', closeNumModal);
+  setupDragToClose('txDragZone', 'modalBackdrop', closeModal);
+  setupDragToClose('numDragZone', 'numModalBackdrop', closeNumModal);
+
+  // ===== contain scrolling inside each modal's own content =====
+  // Stops the sheet from rubber-banding the page behind it when you hit the
+  // top or bottom while scrolling inside it (overscroll-behavior isn't used
+  // on purpose — it's caused single-finger scroll issues on some Android
+  // browsers in other apps built this same way).
+  function containRubberBand(modalSelector) {
+    document.querySelectorAll(modalSelector).forEach((el) => {
+      let startY = 0;
+      el.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+      el.addEventListener('touchmove', (e) => {
+        const delta = e.touches[0].clientY - startY;
+        const atTop = el.scrollTop <= 0;
+        const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+        if ((atTop && delta > 0) || (atBottom && delta < 0)) { e.preventDefault(); }
+      }, { passive: false });
+    });
+  }
+  containRubberBand('.modal');
 
   init();
 })();
