@@ -1,0 +1,11 @@
+{
+  "name": "سجل المدفوعات",
+  "short_name": "المدفوعات",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F6F7FA",
+  "theme_color": "#2452C8",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": []
+}

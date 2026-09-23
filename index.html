@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>سجل المدفوعات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2452C8">
+<style>
+  :root {
+    --bg: #F6F7FA; --bg-elevated: #FFFFFF; --ink: #14161C; --ink-soft: #676B76; --ink-faint: #9498A2;
+    --line: #E4E6EC; --accent: #2452C8; --accent-ink: #FFFFFF; --accent-soft: #E9EEFC;
+    --received: #12805C; --received-soft: #E4F5EE; --paid: #C4432B; --paid-soft: #FBEAE6;
+    --shadow: 0 1px 2px rgba(20,22,28,0.04), 0 8px 24px rgba(20,22,28,0.06);
+    --radius: 14px; --ctrl-h: 42px;
+    box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101114; --bg-elevated: #1A1C21; --ink: #EDEEF2; --ink-soft: #9498A2; --ink-faint: #6B6F79;
+      --line: #2A2D34; --accent: #5A82E0; --accent-ink: #0B0D12; --accent-soft: #1C2438;
+      --received: #3FBE8E; --received-soft: #132420; --paid: #E58269; --paid-soft: #2A1917;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101114; --bg-elevated: #1A1C21; --ink: #EDEEF2; --ink-soft: #9498A2; --ink-faint: #6B6F79;
+    --line: #2A2D34; --accent: #5A82E0; --accent-ink: #0B0D12; --accent-soft: #1C2438;
+    --received: #3FBE8E; --received-soft: #132420; --paid: #E58269; --paid-soft: #2A1917;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Tajawal', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'Space Mono', monospace; direction: ltr; unicode-bidi: embed; display: inline-block; }
+  .app { max-width: 760px; margin: 0 auto; padding: 18px 16px 100px; }
+  header.top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+  h1 { font-size: 20px; font-weight: 800; margin: 0; }
+  .subtitle { color: var(--ink-faint); font-size: 12px; margin-top: 3px; }
+  .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); display: inline-block; margin-inline-end: 5px; }
+  .conn-dot.on { background: var(--received); }
+
+  .tabs { display: flex; gap: 3px; background: var(--bg-elevated); border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
+  .tab-btn { flex: 1; padding: 9px 4px; border: none; background: none; border-radius: 9px; font-size: 12px; font-weight: 700; color: var(--ink-soft); cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .tab-btn.active { background: var(--accent); color: var(--accent-ink); }
+
+  .icn { flex-shrink: 0; color: var(--ink-faint); display: flex; }
+  .ctrl-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .ctrl-box { height: var(--ctrl-h); display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-elevated); padding: 0 12px; box-shadow: var(--shadow); }
+  .ctrl-box input, .ctrl-box select { border: none; background: none; padding: 0; margin: 0; font-size: 13.5px; color: var(--ink); font-family: inherit; height: 100%; width: 100%; min-width: 0; }
+  .ctrl-box input:focus, .ctrl-box select:focus { outline: none; }
+  .ctrl-box:focus-within { border-color: var(--accent); }
+  .ctrl-box select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+  .ctrl-box.select-box { padding-inline-end: 8px; }
+  .ctrl-select-arrow { flex-shrink: 0; color: var(--ink-faint); margin-inline-start: -2px; }
+  .ctrl-search { flex: 1 1 100%; margin-bottom: 10px; }
+  .ctrl-half { flex: 1; min-width: 0; }
+  .ctrl-date-lbl { font-size: 11.5px; color: var(--ink-faint); font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+
+  .filter-clear-row { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+  .filter-clear { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink-soft); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .filter-count { font-size: 12px; color: var(--ink-faint); margin: 0 2px 10px; }
+
+  .search-wrap { position: relative; }
+  .search-results { position: absolute; inset-inline: 0; top: calc(100% + 6px); background: var(--bg-elevated); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); z-index: 20; max-height: 280px; overflow-y: auto; display: none; }
+  .search-results.show { display: block; }
+  .search-result-row { padding: 11px 14px; cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); }
+  .search-result-row:last-child { border-bottom: none; }
+  .search-result-row:hover { background: var(--accent-soft); }
+
+  .section-label { font-size: 12px; color: var(--ink-faint); margin: 18px 0 8px; font-weight: 700; }
+  .num-list { display: flex; flex-direction: column; gap: 8px; }
+  .num-card { background: var(--bg-elevated); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: var(--shadow); }
+  .num-card .left { min-width: 0; }
+  .num-card .phone { font-weight: 700; font-size: 14.5px; }
+  .num-card .label { color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+  .num-card .right { text-align: end; flex-shrink: 0; margin-inline-start: 12px; }
+  .balance { font-weight: 800; font-size: 16px; }
+  .balance.pos { color: var(--received); } .balance.neg { color: var(--paid); } .balance.zero { color: var(--ink-faint); }
+  .num-card .when { color: var(--ink-faint); font-size: 11px; margin-top: 2px; }
+
+  .empty { text-align: center; padding: 46px 18px; color: var(--ink-faint); }
+  .empty .big { font-size: 15.5px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+
+  .detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .back-btn { background: var(--bg-elevated); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; width: 34px; height: 34px; font-size: 17px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .detail-title { min-width: 0; flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px; background: var(--bg-elevated); }
+  .detail-title .phone { font-size: 17px; font-weight: 800; }
+  .detail-title .label-txt { font-size: 12px; color: var(--ink-soft); margin-top: 2px; min-height: 15px; }
+  .detail-title .edit-ic { color: var(--accent); flex-shrink: 0; }
+  .balance-banner { background: var(--accent-soft); border-radius: var(--radius); padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .balance-banner .amt { font-size: 24px; font-weight: 800; }
+  .balance-banner .meta { text-align: end; font-size: 11.5px; color: var(--ink-soft); }
+
+  .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); gap: 10px; cursor: pointer; border-radius: 8px; }
+  .tx-row:hover { background: var(--accent-soft); }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-left { min-width: 0; }
+  .tx-app-row { display: flex; align-items: center; gap: 7px; }
+  .tx-app { font-weight: 700; font-size: 13.5px; }
+  .tx-number { color: var(--ink-faint); font-size: 11.5px; }
+  .tx-meta { color: var(--ink-faint); font-size: 11.5px; margin-top: 2px; }
+  .tx-note { color: var(--ink-soft); font-size: 12px; margin-top: 3px; }
+  .tx-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .tx-amt { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .tx-amt.receive { color: var(--received); } .tx-amt.pay { color: var(--paid); }
+  .tx-chevron { color: var(--ink-faint); flex-shrink: 0; }
+  .tx-tag { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 700; }
+  .tx-tag.receive { background: var(--received-soft); color: var(--received); }
+  .tx-tag.pay { background: var(--paid-soft); color: var(--paid); }
+
+  .fab { position: fixed; inset-inline-end: 18px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); border: none; font-size: 27px; box-shadow: var(--shadow); cursor: pointer; z-index: 30; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(10,11,15,0.5); z-index: 40; display: none; align-items: flex-end; justify-content: center; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: var(--bg-elevated); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 10px 18px calc(22px + env(safe-area-inset-bottom, 0px)); max-height: 88vh; overflow-y: auto; }
+  .modal-top { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; margin-bottom: 8px; }
+  .modal-handle { grid-column: 2; justify-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--line); cursor: grab; padding: 10px 20px; margin: -10px -20px; background-clip: content-box; touch-action: none; }
+  .modal.dragging { transition: none !important; }
+  .modal-close-x { grid-column: 3; justify-self: end; width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--bg); color: var(--ink-soft); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .modal h2 { font-size: 17px; font-weight: 800; margin: 0 0 15px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: 12px; color: var(--ink-soft); margin-bottom: 5px; font-weight: 700; }
+  .field .readonly-val { padding: 11px 12px; border-radius: 10px; background: var(--bg); color: var(--ink-soft); font-size: 14px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 15px; font-family: inherit; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .toggle-row { display: flex; gap: 8px; }
+  .toggle-btn { flex: 1; padding: 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .toggle-btn.active-receive { background: var(--received-soft); border-color: var(--received); color: var(--received); }
+  .toggle-btn.active-pay { background: var(--paid-soft); border-color: var(--paid); color: var(--paid); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .btn { padding: 13px; border-radius: 10px; border: none; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; flex: 1; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-secondary { background: var(--bg); color: var(--ink-soft); border: 1px solid var(--line); }
+  .btn-danger { background: var(--paid); color: #fff; }
+  .hint { font-size: 11.5px; color: var(--paid); margin-top: 4px; display: none; }
+  .hint.show { display: block; }
+  .readonly-note { font-size: 12px; color: var(--accent); background: var(--accent-soft); padding: 9px 13px; border-radius: 10px; margin-bottom: 14px; }
+
+  /* read-only "details" view inside modals */
+  .view-amt-row { display: flex; justify-content: space-between; align-items: center; padding: 18px 16px; background: var(--accent-soft); border-radius: var(--radius); margin-bottom: 14px; }
+  .view-amt { font-size: 26px; font-weight: 800; }
+  .view-amt.receive { color: var(--received); } .view-amt.pay { color: var(--paid); } .view-amt.pos { color: var(--received); } .view-amt.neg { color: var(--paid); } .view-amt.zero { color: var(--ink-faint); }
+  .view-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 2px; border-bottom: 1px solid var(--line); font-size: 14px; gap: 10px; }
+  .view-row:last-child { border-bottom: none; }
+  .view-row-label { color: var(--ink-soft); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+  .view-row-val { font-weight: 700; color: var(--ink); text-align: end; }
+  .view-note-block { padding: 12px 2px 4px; color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
+  .view-note-block .view-row-label { margin-bottom: 4px; }
+
+  .pdf-intro { font-size: 12.5px; color: var(--ink-soft); background: var(--accent-soft); padding: 11px 13px; border-radius: 10px; margin-bottom: 14px; line-height: 1.6; }
+  .export-btn { width: 100%; height: 48px; border: none; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; }
+  #printArea { display: none; }
+  @media print {
+    body > *:not(#printAreaWrap) { display: none !important; }
+    #printAreaWrap { display: block !important; position: absolute; inset: 0; padding: 24px; font-family: 'Tajawal', sans-serif; }
+    #printArea { display: block !important; }
+    .print-header { margin-bottom: 14px; border-bottom: 2px solid #2452C8; padding-bottom: 12px; }
+    .print-header h2 { margin: 0 0 4px; font-size: 21px; color: #14161C; }
+    .print-header .sub { font-size: 12.5px; color: #2452C8; font-weight: bold; margin-bottom: 2px; }
+    .print-header .meta { color: #676B76; font-size: 11.5px; line-height: 1.7; }
+    .pdf-summary { display: flex; gap: 10px; margin: 16px 0 18px; }
+    .pdf-card { flex: 1; border-radius: 10px; padding: 12px 8px; text-align: center; border: 1px solid rgba(0,0,0,0.06); }
+    .pdf-card.received { background: #E4F5EE; } .pdf-card.received .val { color: #12805C; }
+    .pdf-card.paid { background: #FBEAE6; } .pdf-card.paid .val { color: #C4432B; }
+    .pdf-card.net { background: #E9EEFC; } .pdf-card.net .val { color: #2452C8; }
+    .pdf-card .val { font-size: 16px; font-weight: 800; }
+    .pdf-card .lbl { font-size: 10px; color: #676B76; margin-top: 4px; font-weight: bold; }
+    .print-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .print-table th { background: #14161C; color: #fff; padding: 8px 9px; text-align: start; font-weight: bold; }
+    .print-table td { padding: 8px 9px; text-align: start; border-bottom: 1px solid #E4E6EC; }
+    .print-table tr.receive-row { background: #F3FBF7; border-inline-start: 3px solid #12805C; }
+    .print-table tr.pay-row { background: #FDF3F1; border-inline-start: 3px solid #C4432B; }
+    .print-table .amt-receive { color: #12805C; font-weight: bold; }
+    .print-table .amt-pay { color: #C4432B; font-weight: bold; }
+    .print-table .type-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: bold; }
+    .type-pill.receive-row { background: #12805C; color: #fff; }
+    .type-pill.pay-row { background: #C4432B; color: #fff; }
+    .print-footer { margin-top: 16px; text-align: end; font-weight: bold; font-size: 13px; color: #14161C; }
+  }
+  #printAreaWrap { display: none; }
+
+  .lang-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .lang-btn { flex: 1; padding: 14px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-elevated); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: var(--shadow); }
+  .lang-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .settings-card { background: var(--bg-elevated); border: 1px solid var(--line); border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow); }
+
+  .summary-row { display: flex; gap: 7px; margin-bottom: 12px; }
+  .summary-card { flex: 1; min-width: 0; border-radius: 12px; padding: 11px 6px; text-align: center; }
+  .summary-card .amt { font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .summary-card .lbl { font-size: 10px; color: var(--ink-soft); margin-top: 3px; font-weight: 700; }
+  .summary-card.received { background: var(--received-soft); } .summary-card.received .amt { color: var(--received); }
+  .summary-card.paid { background: var(--paid-soft); } .summary-card.paid .amt { color: var(--paid); }
+  .summary-card.net { background: var(--accent-soft); } .summary-card.net .amt { color: var(--accent); }
+
+  /* feel like a native app, not a selectable webpage */
+  * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  input, textarea { -webkit-user-select: text; user-select: text; }
+
+  /* auth gate */
+  #authScreen { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .auth-box { width: 100%; max-width: 380px; }
+  .auth-logo { width: 54px; height: 54px; border-radius: 16px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 14px; }
+  .auth-title { text-align: center; font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+  .auth-sub { text-align: center; color: var(--ink-faint); font-size: 12.5px; margin-bottom: 22px; }
+  .auth-field { margin-bottom: 12px; }
+  .auth-field label { display: block; font-size: 12px; color: var(--ink-soft); margin-bottom: 5px; font-weight: 700; }
+  .auth-field input { width: 100%; padding: 12px 13px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-elevated); color: var(--ink); font-size: 14.5px; font-family: inherit; user-select: text; }
+  .auth-btn { width: 100%; padding: 13px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-size: 14.5px; font-weight: 700; margin-top: 8px; cursor: pointer; font-family: inherit; }
+  .auth-btn:disabled { opacity: 0.6; }
+  .auth-switch { text-align: center; font-size: 12.5px; color: var(--ink-soft); margin-top: 16px; }
+  .auth-switch a { color: var(--accent); font-weight: 700; text-decoration: none; cursor: pointer; }
+  .auth-forgot { text-align: center; font-size: 12px; color: var(--accent); margin-top: 10px; cursor: pointer; font-weight: 700; }
+  .auth-err { font-size: 12.5px; color: var(--paid); background: var(--paid-soft); padding: 9px 12px; border-radius: 10px; margin-bottom: 12px; display: none; }
+  .auth-err.show { display: block; }
+  .auth-msg { font-size: 12.5px; color: var(--received); background: var(--received-soft); padding: 9px 12px; border-radius: 10px; margin-bottom: 12px; display: none; }
+  .auth-msg.show { display: block; }
+  .account-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .account-row .email { font-size: 13px; color: var(--ink-soft); }
+  .signout-btn { padding: 9px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--paid); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1 data-i18n="appTitle">سجل المدفوعات</h1>
+      <div class="subtitle"><span id="connDot" class="conn-dot"></span><span id="connText">جارٍ الاتصال…</span></div>
+    </div>
+  </header>
+
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabTx" data-i18n="tabTransactions">المعاملات</button>
+    <button class="tab-btn" id="tabNums" data-i18n="tabNumbers">الأرقام</button>
+    <button class="tab-btn" id="tabPdf" data-i18n="tabPdf">تصدير PDF</button>
+    <button class="tab-btn" id="tabSettings" data-i18n="tabSettings">الإعدادات</button>
+  </div>
+
+  <!-- TRANSACTIONS TAB -->
+  <div id="txTabView">
+    <div class="summary-row">
+      <div class="summary-card received"><div class="amt mono" id="txSumReceived">0</div><div class="lbl" data-i18n="received"></div></div>
+      <div class="summary-card paid"><div class="amt mono" id="txSumPaid">0</div><div class="lbl" data-i18n="paid"></div></div>
+      <div class="summary-card net"><div class="amt mono" id="txSumNet">0</div><div class="lbl" data-i18n="netTotal"></div></div>
+    </div>
+    <div class="ctrl-box ctrl-search">
+      <span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="txfNumber" class="mono" data-i18n-ph="searchNumber" inputmode="tel">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-box select-box ctrl-half">
+        <select id="txfType"></select>
+        <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+      <div class="ctrl-box select-box ctrl-half">
+        <select id="txfApp"></select>
+        <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-box ctrl-half"><span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span><span class="ctrl-date-lbl" data-i18n="fromDate"></span><input type="date" id="txfFrom"></div>
+      <div class="ctrl-box ctrl-half"><span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span><span class="ctrl-date-lbl" data-i18n="toDate"></span><input type="date" id="txfTo"></div>
+    </div>
+    <div class="filter-clear-row"><button class="filter-clear" id="txfClear"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span data-i18n="clearFilters"></span></button></div>
+    <div class="filter-count" id="txCount"></div>
+    <div id="txAllList"></div>
+    <div id="txEmpty" class="empty" style="display:none;">
+      <div class="big" data-i18n="noTransactions"></div>
+      <div data-i18n="adjustFilters"></div>
+    </div>
+  </div>
+
+  <!-- NUMBERS TAB -->
+  <div id="numsTabView" style="display:none;">
+    <div id="numsListPane">
+      <div class="search-wrap" style="margin-bottom:14px;">
+        <div class="ctrl-box">
+          <span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input id="searchInput" class="mono" data-i18n-ph="searchNumber" inputmode="tel" autocomplete="off">
+        </div>
+        <div id="searchResults" class="search-results"></div>
+      </div>
+      <div class="section-label" data-i18n="allNumbers"></div>
+      <div id="numList" class="num-list"></div>
+      <div id="emptyState" class="empty" style="display:none;">
+        <div class="big" data-i18n="noNumbersYet"></div>
+        <div data-i18n="addFirstPayment"></div>
+      </div>
+    </div>
+
+    <div id="numsDetailPane" style="display:none;">
+      <div class="detail-header">
+        <button class="back-btn" id="backBtn">→</button>
+        <div class="detail-title" id="detailTitleBtn">
+          <div><div class="phone mono" id="detailPhone"></div><div class="label-txt" id="detailLabelTxt"></div></div>
+          <span class="edit-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+        </div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-card received"><div class="amt mono" id="detSumReceived">0</div><div class="lbl" data-i18n="received"></div></div>
+        <div class="summary-card paid"><div class="amt mono" id="detSumPaid">0</div><div class="lbl" data-i18n="paid"></div></div>
+        <div class="summary-card net"><div class="amt mono" id="detSumNet">0</div><div class="lbl" data-i18n="netTotal"></div></div>
+      </div>
+      <div class="filter-count" id="detCount" style="margin-bottom:14px;"></div>
+      <div class="ctrl-row">
+        <div class="ctrl-box select-box ctrl-half">
+          <select id="dfType"></select>
+          <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="ctrl-box select-box ctrl-half">
+          <select id="dfApp"></select>
+          <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-box ctrl-half"><span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span><span class="ctrl-date-lbl" data-i18n="fromDate"></span><input type="date" id="dfFrom"></div>
+        <div class="ctrl-box ctrl-half"><span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span><span class="ctrl-date-lbl" data-i18n="toDate"></span><input type="date" id="dfTo"></div>
+      </div>
+      <div class="filter-clear-row"><button class="filter-clear" id="dfClear"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span data-i18n="clearFilters"></span></button></div>
+      <div class="section-label" data-i18n="history"></div>
+      <div id="txList"></div>
+      <div id="txDetailEmpty" class="empty" style="display:none;"><div class="big" data-i18n="noTransactions"></div></div>
+    </div>
+  </div>
+
+  <!-- PDF TAB -->
+  <div id="pdfTabView" style="display:none;">
+    <div class="pdf-intro" id="pdfIntro"></div>
+    <div class="ctrl-box ctrl-search">
+      <span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="pfNumber" class="mono" data-i18n-ph="searchNumber" inputmode="tel">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-box select-box ctrl-half">
+        <select id="pfType"></select>
+        <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+      <div class="ctrl-box select-box ctrl-half">
+        <select id="pfApp"></select>
+        <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-box ctrl-half"><span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span><span class="ctrl-date-lbl" data-i18n="fromDate"></span><input type="date" id="pfFrom"></div>
+      <div class="ctrl-box ctrl-half"><span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span><span class="ctrl-date-lbl" data-i18n="toDate"></span><input type="date" id="pfTo"></div>
+    </div>
+    <div class="filter-count" id="pfCount"></div>
+    <button class="export-btn" id="pfExportBtn">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h9l3 3v4"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+      <span data-i18n="exportBtn"></span>
+    </button>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="settingsTabView" style="display:none;">
+    <div class="settings-card">
+      <div class="account-row">
+        <span class="email mono" id="accountEmail"></span>
+        <button class="signout-btn" id="signOutBtn" data-i18n="signOut"></button>
+      </div>
+      <div class="section-label" style="margin-top:0;" data-i18n="settingsLanguage"></div>
+      <div class="lang-row">
+        <button class="lang-btn" id="langAr">العربية</button>
+        <button class="lang-btn" id="langFr">Français</button>
+        <button class="lang-btn" id="langEn">English</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH GATE -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">💳</div>
+    <div class="auth-title" id="authTitle"></div>
+    <div class="auth-sub" data-i18n="appTitle"></div>
+    <div class="auth-err" id="authErr"></div>
+    <div class="auth-msg" id="authMsg"></div>
+    <div class="auth-field" id="authNameField" style="display:none;"></div>
+    <div class="auth-field"><label data-i18n="authEmail"></label><input type="email" id="authEmail" autocomplete="email"></div>
+    <div class="auth-field"><label data-i18n="authPassword"></label><input type="password" id="authPassword" autocomplete="current-password"></div>
+    <button class="auth-btn" id="authSubmitBtn"></button>
+    <div class="auth-forgot" id="authForgot" data-i18n="authForgot"></div>
+    <div class="auth-switch" id="authSwitchLine"></div>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn">+</button>
+
+<div id="printAreaWrap"><div id="printArea"></div></div>
+
+<!-- ADD / VIEW / EDIT TRANSACTION MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-top"><span class="modal-handle" id="txHandle"></span><button class="modal-close-x" id="txCloseX">✕</button></div>
+    <h2 id="txModalTitle"></h2>
+
+    <div id="txViewBlock" style="display:none;"></div>
+
+    <div id="txEditFields">
+      <div class="field" id="mNumberField">
+        <label data-i18n="phoneNumber"></label>
+        <input id="mNumber" class="mono" style="width:100%;" data-i18n-ph="numberPlaceholder" inputmode="tel" list="numberSuggestions">
+        <datalist id="numberSuggestions"></datalist>
+        <div class="hint" id="numberHint" data-i18n="invalidNumberHint"></div>
+      </div>
+      <div class="field" id="mNumberReadonlyField" style="display:none;">
+        <label data-i18n="phoneNumber"></label>
+        <div class="readonly-val mono" id="mNumberReadonly"></div>
+      </div>
+      <div class="field">
+        <label data-i18n="type"></label>
+        <div class="toggle-row">
+          <button type="button" class="toggle-btn" id="btnReceive">↓ <span data-i18n="received"></span></button>
+          <button type="button" class="toggle-btn" id="btnPay">↑ <span data-i18n="paid"></span></button>
+        </div>
+      </div>
+      <div class="field"><label id="amountLabelEl"></label><input id="mAmount" type="number" inputmode="decimal" placeholder="0" min="0" step="0.01"></div>
+      <div class="field">
+        <label data-i18n="appOrMethod"></label>
+        <select id="mApp"></select>
+      </div>
+      <div class="field"><label data-i18n="dateLabel"></label><input type="date" id="mDate"></div>
+      <div class="field"><label data-i18n="noteOptional"></label><textarea id="mNote" rows="2" data-i18n-ph="notePlaceholder"></textarea></div>
+    </div>
+
+    <div class="modal-actions" id="footerAdd">
+      <button class="btn btn-secondary" id="cancelBtnAdd" data-i18n="cancel"></button>
+      <button class="btn btn-primary" id="saveBtnAdd" data-i18n="save"></button>
+    </div>
+    <div class="modal-actions" id="footerView" style="display:none;">
+      <button class="btn btn-secondary" id="deleteBtnView" data-i18n="delete"></button>
+      <button class="btn btn-primary" id="editBtnView" data-i18n="edit"></button>
+    </div>
+    <div class="modal-actions" id="footerEdit" style="display:none;">
+      <button class="btn btn-secondary" id="cancelBtnEdit" data-i18n="cancel"></button>
+      <button class="btn btn-primary" id="saveBtnEdit" data-i18n="edit"></button>
+    </div>
+    <div class="modal-actions" id="footerConfirmDelete" style="display:none;">
+      <button class="btn btn-secondary" id="backBtnDelete" data-i18n="goBack"></button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" data-i18n="confirmDelete"></button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW / EDIT NUMBER MODAL -->
+<div class="modal-backdrop" id="numModalBackdrop">
+  <div class="modal">
+    <div class="modal-top"><span class="modal-handle" id="numHandle"></span><button class="modal-close-x" id="numCloseX">✕</button></div>
+    <h2 id="numModalTitle"></h2>
+
+    <div id="numViewBlock" style="display:none;"></div>
+
+    <div id="numEditFields">
+      <div class="field">
+        <label data-i18n="phoneNumber"></label>
+        <input id="enNumber" class="mono" style="width:100%;" data-i18n-ph="numberPlaceholder" inputmode="tel">
+        <div class="hint" id="enNumberHint" data-i18n="invalidNumberHint"></div>
+      </div>
+      <div class="field"><label data-i18n="numberNameLabel"></label><input id="enLabel" data-i18n-ph="numberNamePlaceholder"></div>
+    </div>
+
+    <div class="modal-actions" id="numFooterView">
+      <button class="btn btn-secondary" id="numDeleteBtnView" data-i18n="delete"></button>
+      <button class="btn btn-primary" id="numEditBtnView" data-i18n="edit"></button>
+    </div>
+    <div class="modal-actions" id="numFooterEdit" style="display:none;">
+      <button class="btn btn-secondary" id="numCancelBtnEdit" data-i18n="cancel"></button>
+      <button class="btn btn-primary" id="numSaveBtnEdit" data-i18n="edit"></button>
+    </div>
+    <div class="modal-actions" id="numFooterConfirmDelete" style="display:none;">
+      <button class="btn btn-secondary" id="numBackBtnDelete" data-i18n="goBack"></button>
+      <button class="btn btn-danger" id="numConfirmDeleteBtn" data-i18n="confirmDelete"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK — versions pinned on purpose, never bump to @latest -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+  // TODO: paste the config object from Firebase Console → Project settings → your web app
+  const firebaseConfig = {
+    apiKey: "AIzaSyDciWDEObAKFoadqFahDUW4VHxlAlCBD7s",
+    authDomain: "livre-paiements.firebaseapp.com",
+    projectId: "livre-paiements",
+    storageBucket: "livre-paiements.firebasestorage.app",
+    messagingSenderId: "133880470814",
+    appId: "1:133880470814:web:5bc7d1b90e014d5f683d0f"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+<script>
+(function () {
+  const BRANDS = ['Bankily', 'Sedad', 'Masrivi', 'Click', 'Bimbank Pay', 'PayMoov'];
+
+  const DICT = {
+    ar: { dir:'rtl', appTitle:'سجل المدفوعات', connecting:'جارٍ الاتصال…', connected:'متصل', connError:'خطأ في الاتصال', noStorage:'التخزين غير متاح في هذه المعاينة',
+      readonlyNote:'يمكنك الاطلاع على البيانات، لكن لا يمكنك إضافة أو تعديل معاملات هنا بعد.',
+      tabTransactions:'المعاملات', tabNumbers:'الأرقام', tabPdf:'تصدير PDF', tabSettings:'الإعدادات',
+      searchNumber:'ابحث عن رقم…', allTypes:'كل الأنواع', received:'مستلم', paid:'مدفوع', allApps:'كل التطبيقات',
+      fromDate:'من', toDate:'إلى', clearFilters:'مسح الفلاتر', txCount:function(n){return n+' معاملة';},
+      noTransactions:'لا توجد معاملات', adjustFilters:'عدّل الفلاتر، أو اضغط على + لإضافة معاملة',
+      allNumbers:'كل الأرقام', noNumbersYet:'لا يوجد أي رقم بعد', addFirstPayment:'اضغط على + لتسجيل أول دفعة',
+      netBalance:'الرصيد الصافي (مستلم − مدفوع)', netTotal:'الصافي', history:'السجل',
+      newPayment:'دفعة جديدة', transactionDetails:'تفاصيل المعاملة', editTransaction:'تعديل المعاملة',
+      phoneNumber:'رقم الهاتف', invalidNumberHint:'أدخل رقمًا صحيحًا (6 أرقام على الأقل)', type:'النوع',
+      amountLabel:'المبلغ (أوقية)', appOrMethod:'التطبيق / الوسيلة', dateLabel:'التاريخ',
+      noteOptional:'ملاحظة (اختياري)', notePlaceholder:'مثال: 3 بطاقات شحن', numberPlaceholder:'مثال: 22 34 56 78',
+      cancel:'إلغاء', save:'حفظ', saving:'جارٍ الحفظ…', edit:'تعديل', editing:'جارٍ التعديل…',
+      delete:'حذف', deleting:'جارٍ الحذف…', confirmDelete:'تأكيد الحذف', goBack:'تراجع',
+      errorSave:'تعذّر الحفظ. حاول مرة أخرى.', errorEdit:'تعذّر التعديل. حاول مرة أخرى.', errorDelete:'تعذّر الحذف. حاول مرة أخرى.',
+      numberDetailsTitle:'تفاصيل الرقم', editNumberTitle:'تعديل الرقم', numberNameLabel:'الاسم (اختياري)',
+      numberNamePlaceholder:'مثال: أحمد - المتجر', deleteNumberBtn:'حذف هذا الرقم وكل معاملاته',
+      exportBtn:'تصدير / طباعة PDF', pdfIntroTxt:'اختر الفلاتر ثم اضغط تصدير — سيفتح مربع الطباعة في هاتفك، اختر "حفظ كملف PDF".',
+      pdfNoResults:'لا توجد معاملات مطابقة للفلاتر', settingsLanguage:'اللغة',
+      cashLabel:'نقداً', otherLabel:'أخرى', txCountVal:'عدد المعاملات', notSet:'—',
+      authEmail:'البريد الإلكتروني', authPassword:'كلمة المرور', authForgot:'نسيت كلمة المرور؟',
+      authSignInTitle:'تسجيل الدخول', authSignUpTitle:'إنشاء حساب', authSignIn:'تسجيل الدخول', authCreateAccount:'إنشاء حساب',
+      authNoAccount:'ليس لديك حساب؟', authHaveAccount:'لديك حساب بالفعل؟', authResetSent:'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.',
+      authEnterEmailFirst:'أدخل بريدك الإلكتروني أولاً.', signOut:'تسجيل الخروج',
+      errInvalidEmail:'البريد الإلكتروني غير صالح.', errUserNotFound:'لا يوجد حساب بهذا البريد.', errWrongPassword:'كلمة المرور غير صحيحة.',
+      errEmailInUse:'هذا البريد مستخدم بالفعل.', errWeakPassword:'كلمة المرور ضعيفة جدًا (6 أحرف على الأقل).', errTooManyRequests:'محاولات كثيرة، حاول لاحقًا.', errGeneric:'حدث خطأ. حاول مرة أخرى.',
+      printTitle:'سجل المدفوعات', printGenerated:'أُنشئ في', printFilters:'الفلاتر', printNone:'بدون', printCount:function(n){return n+' معاملة';},
+      colDate:'التاريخ', colNumber:'الرقم', colApp:'التطبيق', colType:'النوع', colAmount:'المبلغ', colNote:'ملاحظة' },
+    fr: { dir:'ltr', appTitle:'Livre des Paiements', connecting:'Connexion…', connected:'Connecté', connError:'Erreur de connexion', noStorage:'Stockage indisponible dans cet aperçu',
+      readonlyNote:"Vous pouvez consulter les données, mais pas encore ajouter ou modifier d'entrées ici.",
+      tabTransactions:'Transactions', tabNumbers:'Numéros', tabPdf:'Export PDF', tabSettings:'Réglages',
+      searchNumber:'Rechercher un numéro…', allTypes:'Tous types', received:'Reçu', paid:'Payé', allApps:'Toutes apps',
+      fromDate:'Du', toDate:'Au', clearFilters:'Effacer', txCount:function(n){return n+' transaction'+(n!==1?'s':'');},
+      noTransactions:'Aucune transaction', adjustFilters:"Ajustez les filtres, ou appuyez sur + pour en ajouter une",
+      allNumbers:'Tous les numéros', noNumbersYet:"Aucun numéro pour l'instant", addFirstPayment:'Appuyez sur + pour enregistrer votre premier paiement',
+      netBalance:'Solde net (reçu − payé)', netTotal:'Net', history:'Historique',
+      newPayment:'Nouveau paiement', transactionDetails:'Détails de la transaction', editTransaction:'Modifier la transaction',
+      phoneNumber:'Numéro de téléphone', invalidNumberHint:'Entrez un numéro valide (au moins 6 chiffres)', type:'Type',
+      amountLabel:'Montant (MRU)', appOrMethod:'Application / moyen', dateLabel:'Date',
+      noteOptional:'Note (optionnel)', notePlaceholder:'ex. 3 cartes de recharge', numberPlaceholder:'ex. 22 34 56 78',
+      cancel:'Annuler', save:'Enregistrer', saving:'Enregistrement…', edit:'Modifier', editing:'Modification…',
+      delete:'Supprimer', deleting:'Suppression…', confirmDelete:'Confirmer la suppression', goBack:'Retour',
+      errorSave:"Impossible d'enregistrer. Réessayez.", errorEdit:'Impossible de modifier. Réessayez.', errorDelete:'Impossible de supprimer. Réessayez.',
+      numberDetailsTitle:'Détails du numéro', editNumberTitle:'Modifier le numéro', numberNameLabel:'Nom (optionnel)',
+      numberNamePlaceholder:'ex. Ahmed - boutique', deleteNumberBtn:'Supprimer ce numéro et toutes ses transactions',
+      exportBtn:'Exporter / Imprimer en PDF', pdfIntroTxt:"Choisissez les filtres puis appuyez sur exporter — la boîte d'impression de votre téléphone s'ouvrira, choisissez « Enregistrer en PDF ».",
+      pdfNoResults:'Aucune transaction ne correspond aux filtres', settingsLanguage:'Langue',
+      cashLabel:'Espèces', otherLabel:'Autre', txCountVal:'Nombre de transactions', notSet:'—',
+      authEmail:'E-mail', authPassword:'Mot de passe', authForgot:'Mot de passe oublié ?',
+      authSignInTitle:'Connexion', authSignUpTitle:'Créer un compte', authSignIn:'Se connecter', authCreateAccount:'Créer un compte',
+      authNoAccount:"Pas encore de compte ?", authHaveAccount:'Déjà un compte ?', authResetSent:'Un lien de réinitialisation a été envoyé à votre e-mail.',
+      authEnterEmailFirst:"Entrez d'abord votre e-mail.", signOut:'Déconnexion',
+      errInvalidEmail:'E-mail invalide.', errUserNotFound:'Aucun compte avec cet e-mail.', errWrongPassword:'Mot de passe incorrect.',
+      errEmailInUse:'Cet e-mail est déjà utilisé.', errWeakPassword:'Mot de passe trop faible (6 caractères minimum).', errTooManyRequests:'Trop de tentatives, réessayez plus tard.', errGeneric:'Une erreur est survenue. Réessayez.',
+      printTitle:'Livre des Paiements', printGenerated:'Généré le', printFilters:'Filtres', printNone:'Aucun', printCount:function(n){return n+' transaction'+(n!==1?'s':'');},
+      colDate:'Date', colNumber:'Numéro', colApp:'Application', colType:'Type', colAmount:'Montant', colNote:'Note' },
+    en: { dir:'ltr', appTitle:'Payment Ledger', connecting:'Connecting…', connected:'Connected', connError:'Connection error', noStorage:'Storage unavailable in this preview',
+      readonlyNote:"You can view the data, but you can't add or edit entries here yet.",
+      tabTransactions:'Transactions', tabNumbers:'Numbers', tabPdf:'PDF Export', tabSettings:'Settings',
+      searchNumber:'Search a number…', allTypes:'All types', received:'Received', paid:'Paid', allApps:'All apps',
+      fromDate:'From', toDate:'To', clearFilters:'Clear filters', txCount:function(n){return n+' transaction'+(n!==1?'s':'');},
+      noTransactions:'No transactions', adjustFilters:'Adjust the filters, or tap + to add one',
+      allNumbers:'All numbers', noNumbersYet:'No numbers yet', addFirstPayment:'Tap + to log your first payment',
+      netBalance:'Net balance (received − paid)', netTotal:'Net', history:'History',
+      newPayment:'New payment', transactionDetails:'Transaction details', editTransaction:'Edit transaction',
+      phoneNumber:'Phone number', invalidNumberHint:'Enter a valid number (at least 6 digits)', type:'Type',
+      amountLabel:'Amount (MRU)', appOrMethod:'App / method', dateLabel:'Date',
+      noteOptional:'Note (optional)', notePlaceholder:'e.g. 3 recharge cards', numberPlaceholder:'e.g. 22 34 56 78',
+      cancel:'Cancel', save:'Save', saving:'Saving…', edit:'Edit', editing:'Saving edit…',
+      delete:'Delete', deleting:'Deleting…', confirmDelete:'Confirm delete', goBack:'Go back',
+      errorSave:'Could not save. Try again.', errorEdit:'Could not save changes. Try again.', errorDelete:'Could not delete. Try again.',
+      numberDetailsTitle:'Number details', editNumberTitle:'Edit number', numberNameLabel:'Name (optional)',
+      numberNamePlaceholder:'e.g. Ahmed - shop', deleteNumberBtn:'Delete this number and all its transactions',
+      exportBtn:'Export / Print to PDF', pdfIntroTxt:"Pick your filters, then tap export — your phone's print dialog will open; choose 'Save as PDF'.",
+      pdfNoResults:'No transactions match these filters', settingsLanguage:'Language',
+      cashLabel:'Cash', otherLabel:'Other', txCountVal:'Number of transactions', notSet:'—',
+      authEmail:'Email', authPassword:'Password', authForgot:'Forgot password?',
+      authSignInTitle:'Sign in', authSignUpTitle:'Create account', authSignIn:'Sign in', authCreateAccount:'Create account',
+      authNoAccount:"Don't have an account?", authHaveAccount:'Already have an account?', authResetSent:'A reset link has been sent to your email.',
+      authEnterEmailFirst:'Enter your email first.', signOut:'Sign out',
+      errInvalidEmail:'That email looks invalid.', errUserNotFound:'No account with that email.', errWrongPassword:'Wrong password.',
+      errEmailInUse:'That email is already in use.', errWeakPassword:'Password too weak (6 characters minimum).', errTooManyRequests:'Too many attempts, try again later.', errGeneric:'Something went wrong. Try again.',
+      printTitle:'Payment Ledger', printGenerated:'Generated on', printFilters:'Filters', printNone:'None', printCount:function(n){return n+' transaction'+(n!==1?'s':'');},
+      colDate:'Date', colNumber:'Number', colApp:'App', colType:'Type', colAmount:'Amount', colNote:'Note' }
+  };
+
+  let lang = 'ar';
+  try { lang = localStorage.getItem('pt_lang') || 'ar'; } catch (e) {}
+  function t(key, arg) { const v = DICT[lang][key]; return typeof v === 'function' ? v(arg) : (v === undefined ? key : v); }
+  function appLabel(app) { if (app === 'cash') return t('cashLabel'); if (app === 'other') return t('otherLabel'); return app; }
+
+  let db = null, myId = null;
+  let numbersData = {};
+  let allTx = [];
+  let currentPhone = null;
+  let txType = 'receive';
+  let editTxId = null, editTxOriginal = null;
+  let unsubNumbers = null, unsubAllTx = null, unsubDetailTx = null;
+
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(n);
+  const sanitizeId = (raw) => (raw || '').replace(/[^\d+]/g, '').replace(/^\+/, '00');
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); };
+  const escapeHtml = (s) => { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; };
+  const dateFmtDisplay = (iso) => { if (!iso) return ''; const parts = iso.split('-'); return parts[2] + '/' + parts[1] + '/' + parts[0]; };
+  const CHEVRON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+  const ICN_PHONE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  const ICN_APP = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M12 8v8"/></svg>';
+  const ICN_CAL = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>';
+  const ICN_NOTE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>';
+  const ICN_TAG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.82 0l4.59-4.59a2 2 0 0 0 0-2.82Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>';
+  const ICN_HASH = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>';
+
+  let connKey = 'connecting';
+  function setConn(ok, key) { $('connDot').classList.toggle('on', ok); connKey = key; $('connText').textContent = t(key); }
+
+  function populateAppOptions(sel, withAll) {
+    sel.innerHTML = '';
+    if (withAll) { const o = document.createElement('option'); o.value=''; o.textContent = t('allApps'); sel.appendChild(o); }
+    BRANDS.forEach((a) => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
+    ['cash','other'].forEach((v) => { const o = document.createElement('option'); o.value = v; o.textContent = appLabel(v); sel.appendChild(o); });
+  }
+  function populateTypeOptions(sel, withAll) {
+    sel.innerHTML = '';
+    if (withAll) { const o = document.createElement('option'); o.value=''; o.textContent = t('allTypes'); sel.appendChild(o); }
+    const o1 = document.createElement('option'); o1.value='receive'; o1.textContent = t('received'); sel.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value='pay'; o2.textContent = t('paid'); sel.appendChild(o2);
+  }
+
+  function translateAll() {
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+    $('amountLabelEl').textContent = t('amountLabel');
+    $('pdfIntro').textContent = t('pdfIntroTxt');
+    populateTypeOptions($('txfType'), true); populateAppOptions($('txfApp'), true);
+    populateTypeOptions($('dfType'), true); populateAppOptions($('dfApp'), true);
+    populateTypeOptions($('pfType'), true); populateAppOptions($('pfApp'), true);
+    populateAppOptions($('mApp'), false);
+    document.title = t('appTitle');
+    $('connText').textContent = t(connKey);
+    renderTxTab(); renderNumbersList();
+    if (currentPhone && numbersData[currentPhone]) { refreshDetailHeader(numbersData[currentPhone]); renderDetailTx(lastDetailRows); }
+    renderPdfCount();
+    ['langAr','langFr','langEn'].forEach((id) => $(id).classList.remove('active'));
+    $('lang' + lang[0].toUpperCase() + lang.slice(1)).classList.add('active');
+    updateAuthUI();
+  }
+
+  function applyLanguage(l) {
+    lang = l;
+    try { localStorage.setItem('pt_lang', l); } catch (e) {}
+    document.getElementById('htmlRoot').setAttribute('lang', l);
+    document.getElementById('htmlRoot').setAttribute('dir', DICT[l].dir);
+    translateAll();
+  }
+  $('langAr').addEventListener('click', () => applyLanguage('ar'));
+  $('langFr').addEventListener('click', () => applyLanguage('fr'));
+  $('langEn').addEventListener('click', () => applyLanguage('en'));
+
+  // ===== auth =====
+  let authMode = 'signin';
+  function mapAuthError(code) {
+    const map = { 'auth/invalid-email':'errInvalidEmail', 'auth/user-not-found':'errUserNotFound', 'auth/wrong-password':'errWrongPassword',
+      'auth/invalid-credential':'errWrongPassword', 'auth/email-already-in-use':'errEmailInUse', 'auth/weak-password':'errWeakPassword',
+      'auth/too-many-requests':'errTooManyRequests' };
+    return t(map[code] || 'errGeneric');
+  }
+  function updateAuthUI() {
+    $('authTitle').textContent = authMode === 'signin' ? t('authSignInTitle') : t('authSignUpTitle');
+    $('authSubmitBtn').textContent = authMode === 'signin' ? t('authSignIn') : t('authCreateAccount');
+    $('authSwitchLine').innerHTML = authMode === 'signin'
+      ? escapeHtml(t('authNoAccount')) + ' <a id="authSwitchLink">' + escapeHtml(t('authCreateAccount')) + '</a>'
+      : escapeHtml(t('authHaveAccount')) + ' <a id="authSwitchLink">' + escapeHtml(t('authSignIn')) + '</a>';
+    $('authForgot').style.display = authMode === 'signin' ? 'block' : 'none';
+    $('authSwitchLink').addEventListener('click', () => {
+      authMode = authMode === 'signin' ? 'signup' : 'signin';
+      $('authErr').classList.remove('show'); $('authMsg').classList.remove('show');
+      updateAuthUI();
+    });
+  }
+  $('authSubmitBtn').addEventListener('click', async () => {
+    const email = $('authEmail').value.trim();
+    const pass = $('authPassword').value;
+    $('authErr').classList.remove('show'); $('authMsg').classList.remove('show');
+    if (!email || !pass) { $('authErr').textContent = t('errGeneric'); $('authErr').classList.add('show'); return; }
+    $('authSubmitBtn').disabled = true;
+    try {
+      if (authMode === 'signin') { await firebase.auth().signInWithEmailAndPassword(email, pass); }
+      else { await firebase.auth().createUserWithEmailAndPassword(email, pass); }
+    } catch (e) {
+      $('authErr').textContent = mapAuthError(e.code); $('authErr').classList.add('show');
+    } finally { $('authSubmitBtn').disabled = false; }
+  });
+  $('authForgot').addEventListener('click', async () => {
+    const email = $('authEmail').value.trim();
+    $('authErr').classList.remove('show'); $('authMsg').classList.remove('show');
+    if (!email) { $('authErr').textContent = t('authEnterEmailFirst'); $('authErr').classList.add('show'); return; }
+    try {
+      await firebase.auth().sendPasswordResetEmail(email);
+      $('authMsg').textContent = t('authResetSent'); $('authMsg').classList.add('show');
+    } catch (e) { $('authErr').textContent = mapAuthError(e.code); $('authErr').classList.add('show'); }
+  });
+  $('signOutBtn').addEventListener('click', () => firebase.auth().signOut());
+
+  async function init() {
+    $('mDate').value = todayStr();
+    document.getElementById('htmlRoot').setAttribute('lang', lang);
+    document.getElementById('htmlRoot').setAttribute('dir', DICT[lang].dir);
+    translateAll();
+    updateAuthUI();
+    db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        myId = user.uid;
+        $('authScreen').style.display = 'none';
+        $('accountEmail').textContent = user.email || '';
+        setConn(true, 'connected');
+        subscribeNumbers();
+        subscribeAllTx();
+      } else {
+        myId = null;
+        if (unsubNumbers) { unsubNumbers(); unsubNumbers = null; }
+        if (unsubAllTx) { unsubAllTx(); unsubAllTx = null; }
+        $('authScreen').style.display = 'flex';
+        $('authEmail').value = ''; $('authPassword').value = '';
+        $('authErr').classList.remove('show'); $('authMsg').classList.remove('show');
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  }
+
+  function numbersCol() { return db.collection('users').doc(myId).collection('numbers'); }
+  function txCol() { return db.collection('users').doc(myId).collection('transactions'); }
+
+  function subscribeNumbers() {
+    if (unsubNumbers) unsubNumbers();
+    unsubNumbers = numbersCol().onSnapshot((snap) => {
+      numbersData = {};
+      snap.docs.forEach((d) => { numbersData[d.id] = d.data(); });
+      renderNumbersList(); refreshSuggestions();
+      if (currentPhone && numbersData[currentPhone]) refreshDetailHeader(numbersData[currentPhone]);
+    }, () => setConn(false, t('connError')));
+  }
+  function subscribeAllTx() {
+    if (unsubAllTx) unsubAllTx();
+    unsubAllTx = txCol().orderBy('date', 'desc').limit(500).onSnapshot((snap) => {
+      allTx = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderTxTab(); renderPdfCount();
+    }, () => setConn(false, t('connError')));
+  }
+
+  $('tabTx').addEventListener('click', () => switchTab('tx'));
+  $('tabNums').addEventListener('click', () => switchTab('nums'));
+  $('tabPdf').addEventListener('click', () => switchTab('pdf'));
+  $('tabSettings').addEventListener('click', () => switchTab('settings'));
+  function switchTab(tab) {
+    ['tx','nums','pdf','settings'].forEach((k) => $('tab' + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', k === tab));
+    $('txTabView').style.display = tab === 'tx' ? 'block' : 'none';
+    $('numsTabView').style.display = tab === 'nums' ? 'block' : 'none';
+    $('pdfTabView').style.display = tab === 'pdf' ? 'block' : 'none';
+    $('settingsTabView').style.display = tab === 'settings' ? 'block' : 'none';
+  }
+
+  function matchesFilters(row, f) {
+    if (f.number && !(row.number || '').includes(f.number)) return false;
+    if (f.type && row.type !== f.type) return false;
+    if (f.app && row.app !== f.app) return false;
+    if (f.from && (row.date || '') < f.from) return false;
+    if (f.to && (row.date || '') > f.to) return false;
+    return true;
+  }
+  function computeSums(rows) {
+    let received = 0, paid = 0;
+    rows.forEach((r) => { if (r.type === 'receive') received += (r.amount || 0); else paid += (r.amount || 0); });
+    return { received, paid, net: received - paid };
+  }
+  function paintSums(prefix, rows) {
+    const s = computeSums(rows);
+    $(prefix + 'Received').textContent = fmt(s.received);
+    $(prefix + 'Paid').textContent = fmt(s.paid);
+    $(prefix + 'Net').textContent = (s.net >= 0 ? '+' : '') + fmt(s.net);
+  }
+  function currentTxFilters() { return { number: sanitizeId($('txfNumber').value), type: $('txfType').value, app: $('txfApp').value, from: $('txfFrom').value, to: $('txfTo').value }; }
+  function renderTxTab() {
+    const f = currentTxFilters();
+    const rows = allTx.filter((r) => matchesFilters(r, f));
+    $('txCount').textContent = t('txCount', rows.length);
+    paintSums('txSum', rows);
+    if (rows.length === 0) { $('txAllList').innerHTML = ''; $('txEmpty').style.display = 'block'; return; }
+    $('txEmpty').style.display = 'none';
+    $('txAllList').innerHTML = rows.map(rowHtml).join('');
+    $('txAllList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, allTx.find(r => r.id === el.dataset.id))));
+  }
+  function rowHtml(r) {
+    const isReceive = r.type === 'receive';
+    return `<div class="tx-row" data-id="${r.id}">
+      <div class="tx-left">
+        <div class="tx-app-row"><span class="tx-app">${escapeHtml(appLabel(r.app) || r.app)}</span><span class="tx-number mono">${escapeHtml(r.display || r.number || '')}</span></div>
+        <div class="tx-meta mono">${dateFmtDisplay(r.date)}</div>
+        ${r.note ? `<div class="tx-note">${escapeHtml(r.note)}</div>` : ''}
+        <span class="tx-tag ${isReceive ? 'receive' : 'pay'}">${isReceive ? t('received') : t('paid')}</span>
+      </div>
+      <div class="tx-right"><div class="tx-amt mono ${isReceive ? 'receive' : 'pay'}">${isReceive ? '+' : '−'}${fmt(r.amount || 0)}</div><span class="tx-chevron">${CHEVRON}</span></div>
+    </div>`;
+  }
+  $('txfNumber').addEventListener('input', renderTxTab);
+  $('txfType').addEventListener('change', renderTxTab);
+  $('txfApp').addEventListener('change', renderTxTab);
+  $('txfFrom').addEventListener('change', renderTxTab);
+  $('txfTo').addEventListener('change', renderTxTab);
+  $('txfClear').addEventListener('click', () => { $('txfNumber').value=''; $('txfType').value=''; $('txfApp').value=''; $('txfFrom').value=''; $('txfTo').value=''; renderTxTab(); });
+
+  function renderNumbersList() {
+    const ids = Object.keys(numbersData);
+    const list = $('numList');
+    if (ids.length === 0) { list.innerHTML = ''; $('emptyState').style.display = 'block'; return; }
+    $('emptyState').style.display = 'none';
+    ids.sort((a, b) => (numbersData[b].lastAt || 0) - (numbersData[a].lastAt || 0));
+    list.innerHTML = ids.map((id) => {
+      const n = numbersData[id];
+      const bal = n.balance || 0;
+      const cls = bal > 0 ? 'pos' : bal < 0 ? 'neg' : 'zero';
+      const when = n.lastAt ? dateFmtDisplay(new Date(n.lastAt).toISOString().slice(0,10)) : '';
+      return `<div class="num-card" data-id="${id}">
+        <div class="left"><div class="phone mono">${n.display || id}</div><div class="label">${n.label ? escapeHtml(n.label) : t('txCount', n.count || 0)}</div></div>
+        <div class="right"><div class="balance mono ${cls}">${bal > 0 ? '+' : ''}${fmt(bal)}</div><div class="when mono">${when}</div></div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.num-card').forEach((el) => el.addEventListener('click', () => openDetail(el.dataset.id)));
+  }
+
+  $('searchInput').addEventListener('input', () => {
+    const q = sanitizeId($('searchInput').value);
+    const box = $('searchResults');
+    if (!q) { box.classList.remove('show'); return; }
+    const matches = Object.keys(numbersData).filter((id) => id.includes(q)).slice(0, 8);
+    if (matches.length === 0) { box.classList.remove('show'); return; }
+    box.innerHTML = matches.map((id) => {
+      const n = numbersData[id];
+      return `<div class="search-result-row" data-id="${id}"><span class="mono">${n.display || id}${n.label ? ' · ' + escapeHtml(n.label) : ''}</span><span class="mono" style="color:var(--ink-faint);font-size:12px;">${fmt(n.balance || 0)}</span></div>`;
+    }).join('');
+    box.classList.add('show');
+    box.querySelectorAll('.search-result-row').forEach((el) => el.addEventListener('click', () => { box.classList.remove('show'); $('searchInput').value = ''; openDetail(el.dataset.id); }));
+  });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrap')) $('searchResults').classList.remove('show'); });
+
+  function openDetail(id) {
+    currentPhone = id;
+    const n = numbersData[id] || {};
+    $('numsListPane').style.display = 'none';
+    $('numsDetailPane').style.display = 'block';
+    refreshDetailHeader(n);
+    $('dfType').value=''; $('dfApp').value=''; $('dfFrom').value=''; $('dfTo').value='';
+    $('txList').innerHTML = '';
+    if (unsubDetailTx) unsubDetailTx();
+    unsubDetailTx = txCol().where('number', '==', id).onSnapshot((snap) => {
+      renderDetailTx(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    }, () => { $('txList').innerHTML = ''; });
+  }
+  function refreshDetailHeader(n) { $('detailPhone').textContent = n.display || currentPhone; $('detailLabelTxt').textContent = n.label || ''; }
+  function currentDetailFilters() { return { type: $('dfType').value, app: $('dfApp').value, from: $('dfFrom').value, to: $('dfTo').value }; }
+  let lastDetailRows = [];
+  function renderDetailTx(rows) {
+    lastDetailRows = rows;
+    const f = currentDetailFilters();
+    const filtered = rows.filter((r) => matchesFilters(r, f)).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt||0)-(a.createdAt||0));
+    paintSums('detSum', filtered);
+    $('detCount').textContent = t('txCount', filtered.length);
+    if (filtered.length === 0) { $('txList').innerHTML = ''; $('txDetailEmpty').style.display = 'block'; return; }
+    $('txDetailEmpty').style.display = 'none';
+    $('txList').innerHTML = filtered.map((r) => {
+      const isReceive = r.type === 'receive';
+      return `<div class="tx-row" data-id="${r.id}">
+        <div class="tx-left">
+          <div class="tx-app">${escapeHtml(appLabel(r.app) || r.app)}</div>
+          <div class="tx-meta mono">${dateFmtDisplay(r.date)}</div>
+          ${r.note ? `<div class="tx-note">${escapeHtml(r.note)}</div>` : ''}
+          <span class="tx-tag ${isReceive ? 'receive' : 'pay'}">${isReceive ? t('received') : t('paid')}</span>
+        </div>
+        <div class="tx-right"><div class="tx-amt mono ${isReceive ? 'receive' : 'pay'}">${isReceive ? '+' : '−'}${fmt(r.amount || 0)}</div><span class="tx-chevron">${CHEVRON}</span></div>
+      </div>`;
+    }).join('');
+    $('txList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, filtered.find(r => r.id === el.dataset.id))));
+  }
+  $('dfType').addEventListener('change', () => renderDetailTx(lastDetailRows));
+  $('dfApp').addEventListener('change', () => renderDetailTx(lastDetailRows));
+  $('dfFrom').addEventListener('change', () => renderDetailTx(lastDetailRows));
+  $('dfTo').addEventListener('change', () => renderDetailTx(lastDetailRows));
+  $('dfClear').addEventListener('click', () => { $('dfType').value=''; $('dfApp').value=''; $('dfFrom').value=''; $('dfTo').value=''; renderDetailTx(lastDetailRows); });
+
+
+
+  $('backBtn').addEventListener('click', () => {
+    if (unsubDetailTx) { unsubDetailTx(); unsubDetailTx = null; }
+    currentPhone = null;
+    $('numsDetailPane').style.display = 'none';
+    $('numsListPane').style.display = 'block';
+  });
+
+  // ===== NUMBER MODAL =====
+  function renderNumViewBlock(id, n) {
+    const bal = n.balance || 0;
+    const cls = bal > 0 ? 'pos' : bal < 0 ? 'neg' : 'zero';
+    $('numViewBlock').innerHTML = `
+      <div class="view-amt-row"><div class="view-amt mono ${cls}">${bal > 0 ? '+' : ''}${fmt(bal)} MRU</div><div style="font-size:11px;color:var(--ink-soft);">${t('netBalance')}</div></div>
+      <div class="view-row"><span class="view-row-label">${ICN_PHONE}${t('phoneNumber')}</span><span class="view-row-val mono">${escapeHtml(n.display || id)}</span></div>
+      <div class="view-row"><span class="view-row-label">${ICN_TAG}${t('numberNameLabel')}</span><span class="view-row-val">${n.label ? escapeHtml(n.label) : t('notSet')}</span></div>
+      <div class="view-row"><span class="view-row-label">${ICN_HASH}${t('txCountVal')}</span><span class="view-row-val mono">${n.count || 0}</span></div>
+    `;
+  }
+  function setNumFooter(mode) {
+    $('numFooterView').style.display = mode === 'view' ? 'flex' : 'none';
+    $('numFooterEdit').style.display = mode === 'edit' ? 'flex' : 'none';
+    $('numFooterConfirmDelete').style.display = mode === 'confirmDelete' ? 'flex' : 'none';
+  }
+  function showNumView() { $('numViewBlock').style.display = 'block'; $('numEditFields').style.display = 'none'; }
+  function showNumEdit() { $('numViewBlock').style.display = 'none'; $('numEditFields').style.display = 'block'; }
+  function closeNumModal() { $('numModalBackdrop').classList.remove('show'); }
+  $('numCloseX').addEventListener('click', closeNumModal);
+  $('numHandle').addEventListener('click', closeNumModal);
+
+  $('detailTitleBtn').addEventListener('click', () => {
+    if (!currentPhone) return;
+    const n = numbersData[currentPhone] || {};
+    renderNumViewBlock(currentPhone, n);
+    $('numModalTitle').textContent = t('numberDetailsTitle');
+    showNumView();
+    setNumFooter('view');
+    $('numModalBackdrop').classList.add('show');
+  });
+  $('numModalBackdrop').addEventListener('click', (e) => { if (e.target === $('numModalBackdrop')) closeNumModal(); });
+  $('numEditBtnView').addEventListener('click', () => {
+    const n = numbersData[currentPhone] || {};
+    $('enNumber').value = n.display || currentPhone; $('enLabel').value = n.label || '';
+    $('enNumberHint').classList.remove('show');
+    showNumEdit(); setNumFooter('edit'); $('numModalTitle').textContent = t('editNumberTitle');
+    setTimeout(() => $('enNumber').focus(), 30);
+  });
+  $('numCancelBtnEdit').addEventListener('click', () => {
+    const n = numbersData[currentPhone] || {};
+    renderNumViewBlock(currentPhone, n);
+    showNumView(); setNumFooter('view'); $('numModalTitle').textContent = t('numberDetailsTitle');
+  });
+  $('numDeleteBtnView').addEventListener('click', () => setNumFooter('confirmDelete'));
+  $('numBackBtnDelete').addEventListener('click', () => setNumFooter('view'));
+
+  let enSaving = false;
+  $('numSaveBtnEdit').addEventListener('click', async () => {
+    if (enSaving || !currentPhone) return;
+    const rawNumber = $('enNumber').value.trim();
+    const newId = sanitizeId(rawNumber);
+    if (!newId || newId.length < 6) { $('enNumberHint').classList.add('show'); return; }
+    $('enNumberHint').classList.remove('show');
+    enSaving = true; $('numSaveBtnEdit').textContent = t('editing');
+    const newLabel = $('enLabel').value.trim(); const oldId = currentPhone;
+    try {
+      if (newId === oldId) { await numbersCol().doc(oldId).update({ display: rawNumber, label: newLabel }); }
+      else {
+        const oldSnap = await numbersCol().doc(oldId).get();
+        const oldData = oldSnap.exists ? oldSnap.data() : { balance: 0, count: 0, lastAt: Date.now() };
+        const txSnap = await txCol().where('number', '==', oldId).get();
+        for (const d of txSnap.docs) { await d.ref.update({ number: newId, display: rawNumber }); }
+        const destSnap = await numbersCol().doc(newId).get();
+        const destData = destSnap.exists ? destSnap.data() : { balance: 0, count: 0, lastAt: 0 };
+        const merged = { display: rawNumber, label: newLabel || destData.label || '', balance: (destData.balance||0)+(oldData.balance||0), count: (destData.count||0)+(oldData.count||0), lastAt: Math.max(destData.lastAt||0, oldData.lastAt||0) };
+        if (destSnap.exists) { await numbersCol().doc(newId).update(merged); } else { await numbersCol().doc(newId).set(merged); }
+        await numbersCol().doc(oldId).delete();
+        currentPhone = newId;
+      }
+      const freshSnap = await numbersCol().doc(currentPhone).get();
+      renderNumViewBlock(currentPhone, freshSnap.exists ? freshSnap.data() : {});
+      showNumView(); setNumFooter('view'); $('numModalTitle').textContent = t('numberDetailsTitle');
+    } catch (e) { alert(t('errorEdit')); }
+    finally { enSaving = false; $('numSaveBtnEdit').textContent = t('edit'); }
+  });
+  $('numConfirmDeleteBtn').addEventListener('click', async () => {
+    if (!currentPhone) return;
+    const id = currentPhone; $('numConfirmDeleteBtn').textContent = t('deleting');
+    try {
+      const txSnap = await txCol().where('number', '==', id).get();
+      for (const d of txSnap.docs) { await d.ref.delete(); }
+      await numbersCol().doc(id).delete();
+      closeNumModal();
+      if (unsubDetailTx) { unsubDetailTx(); unsubDetailTx = null; }
+      currentPhone = null; $('numsDetailPane').style.display = 'none'; $('numsListPane').style.display = 'block';
+    } catch (e) { alert(t('errorDelete')); }
+    finally { $('numConfirmDeleteBtn').textContent = t('confirmDelete'); }
+  });
+
+  // ===== TRANSACTION MODAL =====
+  function refreshSuggestions() { $('numberSuggestions').innerHTML = Object.keys(numbersData).map((id) => { const n = numbersData[id]; return `<option value="${n.display || id}">`; }).join(''); }
+  function renderTxViewBlock(r) {
+    const isReceive = r.type === 'receive';
+    $('txViewBlock').innerHTML = `
+      <div class="view-amt-row"><div class="view-amt mono ${isReceive ? 'receive' : 'pay'}">${isReceive ? '+' : '−'}${fmt(r.amount||0)} MRU</div><span class="tx-tag ${isReceive ? 'receive' : 'pay'}">${isReceive ? t('received') : t('paid')}</span></div>
+      <div class="view-row"><span class="view-row-label">${ICN_PHONE}${t('phoneNumber')}</span><span class="view-row-val mono">${escapeHtml(r.display || r.number)}</span></div>
+      <div class="view-row"><span class="view-row-label">${ICN_APP}${t('appOrMethod')}</span><span class="view-row-val">${escapeHtml(appLabel(r.app) || r.app)}</span></div>
+      <div class="view-row"><span class="view-row-label">${ICN_CAL}${t('dateLabel')}</span><span class="view-row-val mono">${dateFmtDisplay(r.date)}</span></div>
+      ${r.note ? `<div class="view-note-block"><div class="view-row-label">${ICN_NOTE}${t('noteOptional')}</div>${escapeHtml(r.note)}</div>` : ''}
+    `;
+  }
+  function setTxFooter(mode) {
+    $('footerAdd').style.display = mode === 'add' ? 'flex' : 'none';
+    $('footerView').style.display = mode === 'view' ? 'flex' : 'none';
+    $('footerEdit').style.display = mode === 'edit' ? 'flex' : 'none';
+    $('footerConfirmDelete').style.display = mode === 'confirmDelete' ? 'flex' : 'none';
+  }
+  function showTxView() { $('txViewBlock').style.display = 'block'; $('txEditFields').style.display = 'none'; }
+  function showTxEdit() { $('txViewBlock').style.display = 'none'; $('txEditFields').style.display = 'block'; }
+  function closeModal() { $('modalBackdrop').classList.remove('show'); editTxId = null; editTxOriginal = null; }
+  $('txCloseX').addEventListener('click', closeModal);
+  $('txHandle').addEventListener('click', closeModal);
+
+  function openModal() {
+    editTxId = null; editTxOriginal = null;
+    $('txModalTitle').textContent = t('newPayment');
+    $('mNumberField').style.display = 'block'; $('mNumberReadonlyField').style.display = 'none';
+    $('mNumber').value = currentPhone ? (numbersData[currentPhone]?.display || currentPhone) : '';
+    $('mAmount').value = ''; $('mApp').selectedIndex = 0; $('mDate').value = todayStr(); $('mNote').value = '';
+    setTxType('receive'); showTxEdit(); $('numberHint').classList.remove('show');
+    setTxFooter('add'); $('modalBackdrop').classList.add('show');
+    setTimeout(() => $('mNumber').focus(), 50);
+  }
+  function openViewTx(id, r) {
+    if (!r) return;
+    editTxId = id; editTxOriginal = r;
+    $('txModalTitle').textContent = t('transactionDetails');
+    $('mNumberField').style.display = 'none'; $('mNumberReadonlyField').style.display = 'block';
+    $('mNumberReadonly').textContent = r.display || r.number;
+    renderTxViewBlock(r); showTxView();
+    setTxFooter('view');
+    $('modalBackdrop').classList.add('show');
+  }
+  function fillTxEditFields(r) {
+    $('mAmount').value = r.amount || '';
+    $('mApp').value = (BRANDS.includes(r.app) || r.app === 'cash' || r.app === 'other') ? r.app : 'other';
+    $('mDate').value = r.date || todayStr();
+    $('mNote').value = r.note || '';
+    setTxType(r.type === 'pay' ? 'pay' : 'receive');
+  }
+  $('editBtnView').addEventListener('click', () => {
+    fillTxEditFields(editTxOriginal);
+    showTxEdit(); $('txModalTitle').textContent = t('editTransaction'); setTxFooter('edit');
+  });
+  $('cancelBtnEdit').addEventListener('click', () => {
+    if (editTxOriginal) renderTxViewBlock(editTxOriginal);
+    showTxView(); $('txModalTitle').textContent = t('transactionDetails'); setTxFooter('view');
+  });
+  $('deleteBtnView').addEventListener('click', () => setTxFooter('confirmDelete'));
+  $('backBtnDelete').addEventListener('click', () => setTxFooter('view'));
+  $('fabBtn').addEventListener('click', openModal);
+  $('cancelBtnAdd').addEventListener('click', closeModal);
+  $('modalBackdrop').addEventListener('click', (e) => { if (e.target === $('modalBackdrop')) closeModal(); });
+
+  function setTxType(v) { txType = v; $('btnReceive').classList.toggle('active-receive', v === 'receive'); $('btnPay').classList.toggle('active-pay', v === 'pay'); }
+  $('btnReceive').addEventListener('click', () => setTxType('receive'));
+  $('btnPay').addEventListener('click', () => setTxType('pay'));
+
+  async function adjustNumberBalance(id, deltaBalance, deltaCount, display) {
+    const ref = numbersCol().doc(id);
+    const snap = await ref.get();
+    if (snap.exists) { const cur = snap.data(); await ref.update({ balance: (cur.balance||0)+deltaBalance, count: Math.max(0,(cur.count||0)+deltaCount), lastAt: Date.now() }); }
+    else if (deltaCount > 0) { await ref.set({ display: display || id, label: '', balance: deltaBalance, count: deltaCount, lastAt: Date.now() }); }
+  }
+
+  $('saveBtnAdd').addEventListener('click', async () => {
+    if (!db) return;
+    const amount = parseFloat($('mAmount').value);
+    if (!amount || amount <= 0) { $('mAmount').focus(); return; }
+    const rawNumber = $('mNumber').value.trim();
+    const id = sanitizeId(rawNumber);
+    if (!id || id.length < 6) { $('numberHint').classList.add('show'); return; }
+    $('numberHint').classList.remove('show');
+    const app = $('mApp').value, date = $('mDate').value || todayStr(), note = $('mNote').value.trim();
+    $('saveBtnAdd').textContent = t('saving');
+    const now = Date.now();
+    try {
+      await txCol().add({ number: id, display: rawNumber, type: txType, amount, app, date, note, createdAt: now, createdBy: myId || null });
+      const delta = txType === 'receive' ? amount : -amount;
+      await adjustNumberBalance(id, delta, 1, rawNumber);
+      closeModal();
+    } catch (e) { alert(t('errorSave')); }
+    finally { $('saveBtnAdd').textContent = t('save'); }
+  });
+
+  $('saveBtnEdit').addEventListener('click', async () => {
+    if (!editTxId) return;
+    const amount = parseFloat($('mAmount').value);
+    if (!amount || amount <= 0) { $('mAmount').focus(); return; }
+    const app = $('mApp').value, date = $('mDate').value || todayStr(), note = $('mNote').value.trim();
+    $('saveBtnEdit').textContent = t('editing');
+    try {
+      const txRef = txCol().doc(editTxId);
+      const old = editTxOriginal;
+      const oldDelta = old.type === 'receive' ? (old.amount||0) : -(old.amount||0);
+      const newDelta = txType === 'receive' ? amount : -amount;
+      const updated = { ...old, type: txType, amount, app, date, note };
+      await txRef.update({ type: txType, amount, app, date, note });
+      await adjustNumberBalance(old.number, newDelta - oldDelta, 0, old.display);
+      editTxOriginal = updated;
+      renderTxViewBlock(updated); showTxView(); $('txModalTitle').textContent = t('transactionDetails'); setTxFooter('view');
+    } catch (e) { alert(t('errorEdit')); }
+    finally { $('saveBtnEdit').textContent = t('edit'); }
+  });
+
+  $('confirmDeleteBtn').addEventListener('click', async () => {
+    if (!editTxId) return;
+    $('confirmDeleteBtn').textContent = t('deleting');
+    try {
+      const old = editTxOriginal;
+      await txCol().doc(editTxId).delete();
+      const oldDelta = old.type === 'receive' ? (old.amount||0) : -(old.amount||0);
+      await adjustNumberBalance(old.number, -oldDelta, -1, old.display);
+      closeModal();
+    } catch (e) { alert(t('errorDelete')); }
+    finally { $('confirmDeleteBtn').textContent = t('confirmDelete'); }
+  });
+
+  // ===== PDF TAB =====
+  function currentPdfFilters() { return { number: sanitizeId($('pfNumber').value), type: $('pfType').value, app: $('pfApp').value, from: $('pfFrom').value, to: $('pfTo').value }; }
+  function renderPdfCount() {
+    const f = currentPdfFilters();
+    const rows = allTx.filter((r) => matchesFilters(r, f));
+    $('pfCount').textContent = t('txCount', rows.length);
+  }
+  $('pfNumber').addEventListener('input', renderPdfCount);
+  $('pfType').addEventListener('change', renderPdfCount);
+  $('pfApp').addEventListener('change', renderPdfCount);
+  $('pfFrom').addEventListener('change', renderPdfCount);
+  $('pfTo').addEventListener('change', renderPdfCount);
+
+  $('pfExportBtn').addEventListener('click', () => {
+    const f = currentPdfFilters();
+    const rows = allTx.filter((r) => matchesFilters(r, f)).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+    const filterParts = [];
+    if (f.number) filterParts.push(t('phoneNumber') + ': ' + f.number);
+    if (f.type) filterParts.push(t('type') + ': ' + (f.type === 'receive' ? t('received') : t('paid')));
+    if (f.app) filterParts.push(t('appOrMethod') + ': ' + appLabel(f.app));
+    if (f.from) filterParts.push(t('fromDate') + ': ' + dateFmtDisplay(f.from));
+    if (f.to) filterParts.push(t('toDate') + ': ' + dateFmtDisplay(f.to));
+    const filtersTxt = filterParts.length ? filterParts.join(' · ') : t('printNone');
+    const now = new Date();
+    const genStr = pad2(now.getDate()) + '/' + pad2(now.getMonth()+1) + '/' + now.getFullYear();
+
+    const uniqueNumbers = new Set(rows.map((r) => r.number));
+    const isSingle = rows.length > 0 && uniqueNumbers.size === 1;
+    let titleHtml = escapeHtml(t('printTitle'));
+    let subHtml = '';
+    if (isSingle) {
+      const numId = rows[0].number;
+      const info = numbersData[numId] || {};
+      subHtml = `<div class="sub"><span class="mono">${escapeHtml(info.display || rows[0].display || numId)}</span>${info.label ? ' · ' + escapeHtml(info.label) : ''}</div>`;
+    }
+
+    const sums = computeSums(rows);
+    const summaryHtml = `<div class="pdf-summary">
+      <div class="pdf-card received"><div class="val mono">${fmt(sums.received)}</div><div class="lbl">${t('received')}</div></div>
+      <div class="pdf-card paid"><div class="val mono">${fmt(sums.paid)}</div><div class="lbl">${t('paid')}</div></div>
+      <div class="pdf-card net"><div class="val mono">${sums.net >= 0 ? '+' : ''}${fmt(sums.net)}</div><div class="lbl">${t('netTotal')}</div></div>
+    </div>`;
+
+    let bodyHtml;
+    if (rows.length === 0) {
+      bodyHtml = summaryHtml + `<p>${escapeHtml(t('pdfNoResults'))}</p>`;
+    } else {
+      const headCols = isSingle
+        ? `<th>${t('colDate')}</th><th>${t('colApp')}</th><th>${t('colType')}</th><th>${t('colAmount')}</th><th>${t('colNote')}</th>`
+        : `<th>${t('colDate')}</th><th>${t('colNumber')}</th><th>${t('colApp')}</th><th>${t('colType')}</th><th>${t('colAmount')}</th><th>${t('colNote')}</th>`;
+      const trs = rows.map((r) => {
+        const isReceive = r.type === 'receive';
+        const rowCls = isReceive ? 'receive-row' : 'pay-row';
+        const numberCell = isSingle ? '' : `<td>${escapeHtml(r.display || r.number)}</td>`;
+        return `<tr class="${rowCls}">
+          <td>${dateFmtDisplay(r.date)}</td>
+          ${numberCell}
+          <td>${escapeHtml(appLabel(r.app) || r.app)}</td>
+          <td><span class="type-pill ${rowCls}">${isReceive ? t('received') : t('paid')}</span></td>
+          <td class="${isReceive ? 'amt-receive' : 'amt-pay'} mono">${isReceive ? '+' : '−'}${fmt(r.amount||0)}</td>
+          <td>${escapeHtml(r.note || '')}</td>
+        </tr>`;
+      }).join('');
+      bodyHtml = summaryHtml + `<table class="print-table"><thead><tr>${headCols}</tr></thead><tbody>${trs}</tbody></table>
+      <div class="print-footer">${t('printCount', rows.length)}</div>`;
+    }
+
+    $('printArea').innerHTML = `<div class="print-header">
+      <h2>${titleHtml}</h2>${subHtml}
+      <div class="meta">${t('printGenerated')}: ${genStr}<br>${t('printFilters')}: ${escapeHtml(filtersTxt)}</div>
+    </div>${bodyHtml}`;
+    window.print();
+  });
+
+  // ===== drag-to-dismiss on modal handles =====
+  function setupDragToClose(handleId, backdropId, closeFn) {
+    const handle = $(handleId);
+    const backdrop = $(backdropId);
+    const modalEl = backdrop.querySelector('.modal');
+    let startY = 0, dy = 0, dragging = false;
+    handle.addEventListener('pointerdown', (e) => {
+      dragging = true; startY = e.clientY; dy = 0;
+      modalEl.classList.add('dragging');
+      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    handle.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      dy = Math.max(0, e.clientY - startY);
+      modalEl.style.transform = 'translateY(' + dy + 'px)';
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      modalEl.classList.remove('dragging');
+      if (dy > 110) {
+        modalEl.style.transition = 'transform 0.2s ease';
+        modalEl.style.transform = 'translateY(100%)';
+        setTimeout(() => { modalEl.style.transform = ''; modalEl.style.transition = ''; closeFn(); }, 190);
+      } else {
+        modalEl.style.transition = 'transform 0.2s ease';
+        modalEl.style.transform = '';
+        setTimeout(() => { modalEl.style.transition = ''; }, 210);
+      }
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+  }
+  setupDragToClose('txHandle', 'modalBackdrop', closeModal);
+  setupDragToClose('numHandle', 'numModalBackdrop', closeNumModal);
+
+  init();
+})();
+</script>
+</body>
+</html>
