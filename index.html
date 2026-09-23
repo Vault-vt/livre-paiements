@@ -35,12 +35,12 @@
     --received: #3FBE8E; --received-soft: #132420; --paid: #E58269; --paid-soft: #2A1917;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
   }
-  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: pan-x pan-y; }
   html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Tajawal', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
   .mono { font-family: 'Space Mono', monospace; direction: ltr; unicode-bidi: embed; display: inline-block; }
-  .app { position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; max-width: 760px; margin: 0 auto; padding: 18px 16px 100px; }
+  .app { position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; max-width: 760px; margin: 0 auto; padding: 18px 16px 100px; }
   header.top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
   h1 { font-size: 20px; font-weight: 800; margin: 0; }
   .subtitle { color: var(--ink-faint); font-size: 12px; margin-top: 3px; }
@@ -197,13 +197,18 @@
   .lang-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
   .settings-card { background: var(--bg-elevated); border: 1px solid var(--line); border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow); }
 
-  .summary-row { display: flex; gap: 7px; margin-bottom: 12px; }
-  .summary-card { flex: 1; min-width: 0; border-radius: 12px; padding: 11px 6px; text-align: center; }
-  .summary-card .amt { font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .summary-card .lbl { font-size: 10px; color: var(--ink-soft); margin-top: 3px; font-weight: 700; }
-  .summary-card.received { background: var(--received-soft); } .summary-card.received .amt { color: var(--received); }
-  .summary-card.paid { background: var(--paid-soft); } .summary-card.paid .amt { color: var(--paid); }
-  .summary-card.net { background: var(--accent-soft); } .summary-card.net .amt { color: var(--accent); }
+  .summary-stack { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .summary-card-full { border-radius: 14px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .summary-card-full .lbl { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+  .summary-card-full .amt { font-weight: 800; font-size: 22px; max-width: 70%; white-space: nowrap; overflow: hidden; }
+  .summary-card-full.received { background: var(--received-soft); } .summary-card-full.received .amt { color: var(--received); }
+  .summary-card-full.paid { background: var(--paid-soft); } .summary-card-full.paid .amt { color: var(--paid); }
+  .summary-card-full.net { background: var(--accent-soft); } .summary-card-full.net .amt { color: var(--accent); }
+
+  .month-picker { display: flex; align-items: center; justify-content: space-between; background: var(--bg-elevated); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .month-picker button { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 17px; cursor: pointer; }
+  .month-picker .m-label { font-weight: 800; font-size: 15px; }
+  .day-range-lbl { font-size: 11.5px; color: var(--ink-faint); font-weight: 700; flex-shrink: 0; white-space: nowrap; }
 
   /* feel like a native app, not a selectable webpage */
   * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -249,6 +254,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" id="tabTx" data-i18n="tabTransactions">المعاملات</button>
+    <button class="tab-btn" id="tabMonthly" data-i18n="tabMonthly">الشهري</button>
     <button class="tab-btn" id="tabNums" data-i18n="tabNumbers">الأرقام</button>
     <button class="tab-btn" id="tabPdf" data-i18n="tabPdf">تصدير PDF</button>
     <button class="tab-btn" id="tabSettings" data-i18n="tabSettings">الإعدادات</button>
@@ -256,10 +262,10 @@
 
   <!-- TRANSACTIONS TAB -->
   <div id="txTabView">
-    <div class="summary-row">
-      <div class="summary-card received"><div class="amt mono" id="txSumReceived">0</div><div class="lbl" data-i18n="received"></div></div>
-      <div class="summary-card paid"><div class="amt mono" id="txSumPaid">0</div><div class="lbl" data-i18n="paid"></div></div>
-      <div class="summary-card net"><div class="amt mono" id="txSumNet">0</div><div class="lbl" data-i18n="netTotal"></div></div>
+    <div class="summary-stack">
+      <div class="summary-card-full received"><span class="lbl" data-i18n="received"></span><span class="amt mono" id="txSumReceived">0</span></div>
+      <div class="summary-card-full paid"><span class="lbl" data-i18n="paid"></span><span class="amt mono" id="txSumPaid">0</span></div>
+      <div class="summary-card-full net"><span class="lbl" data-i18n="netTotal"></span><span class="amt mono" id="txSumNet">0</span></div>
     </div>
     <div class="ctrl-box ctrl-search">
       <span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -283,6 +289,52 @@
     <div class="filter-count" id="txCount"></div>
     <div id="txAllList"></div>
     <div id="txEmpty" class="empty" style="display:none;">
+      <div class="big" data-i18n="noTransactions"></div>
+      <div data-i18n="adjustFilters"></div>
+    </div>
+  </div>
+
+  <!-- MONTHLY TAB -->
+  <div id="monthlyTabView" style="display:none;">
+    <div class="month-picker">
+      <button id="mPrevBtn" aria-label="prev">‹</button>
+      <span class="m-label" id="mMonthLabel"></span>
+      <button id="mNextBtn" aria-label="next">›</button>
+    </div>
+    <div class="ctrl-box ctrl-search">
+      <span class="icn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="mfNumber" class="mono" data-i18n-ph="searchNumber" inputmode="tel">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-box select-box ctrl-half">
+        <select id="mfType"></select>
+        <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+      <div class="ctrl-box select-box ctrl-half">
+        <select id="mfApp"></select>
+        <span class="ctrl-select-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-box ctrl-half"><span class="day-range-lbl" data-i18n="fromDay"></span><input type="number" id="mfDayFrom" min="1" max="31" inputmode="numeric" placeholder="1"></div>
+      <div class="ctrl-box ctrl-half"><span class="day-range-lbl" data-i18n="toDay"></span><input type="number" id="mfDayTo" min="1" max="31" inputmode="numeric" placeholder="31"></div>
+    </div>
+    <div class="filter-clear-row"><button class="filter-clear" id="mfClear"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span data-i18n="clearFilters"></span></button></div>
+
+    <div class="summary-stack">
+      <div class="summary-card-full received"><span class="lbl" data-i18n="received"></span><span class="amt mono" id="mSumReceived">0</span></div>
+      <div class="summary-card-full paid"><span class="lbl" data-i18n="paid"></span><span class="amt mono" id="mSumPaid">0</span></div>
+      <div class="summary-card-full net"><span class="lbl" data-i18n="netTotal"></span><span class="amt mono" id="mSumNet">0</span></div>
+    </div>
+
+    <button class="export-btn" id="mExportBtn">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h9l3 3v4"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+      <span id="mExportLabel"></span>
+    </button>
+
+    <div class="filter-count" id="mCount"></div>
+    <div id="mList"></div>
+    <div id="mEmpty" class="empty" style="display:none;">
       <div class="big" data-i18n="noTransactions"></div>
       <div data-i18n="adjustFilters"></div>
     </div>
@@ -314,10 +366,10 @@
           <span class="edit-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
         </div>
       </div>
-      <div class="summary-row">
-        <div class="summary-card received"><div class="amt mono" id="detSumReceived">0</div><div class="lbl" data-i18n="received"></div></div>
-        <div class="summary-card paid"><div class="amt mono" id="detSumPaid">0</div><div class="lbl" data-i18n="paid"></div></div>
-        <div class="summary-card net"><div class="amt mono" id="detSumNet">0</div><div class="lbl" data-i18n="netTotal"></div></div>
+      <div class="summary-stack">
+        <div class="summary-card-full received"><span class="lbl" data-i18n="received"></span><span class="amt mono" id="detSumReceived">0</span></div>
+        <div class="summary-card-full paid"><span class="lbl" data-i18n="paid"></span><span class="amt mono" id="detSumPaid">0</span></div>
+        <div class="summary-card-full net"><span class="lbl" data-i18n="netTotal"></span><span class="amt mono" id="detSumNet">0</span></div>
       </div>
       <div class="filter-count" id="detCount" style="margin-bottom:14px;"></div>
       <div class="ctrl-row">
@@ -539,9 +591,9 @@
   const DICT = {
     ar: { dir:'rtl', appTitle:'سجل المدفوعات', connecting:'جارٍ الاتصال…', connected:'متصل', connError:'خطأ في الاتصال', noStorage:'التخزين غير متاح في هذه المعاينة',
       readonlyNote:'يمكنك الاطلاع على البيانات، لكن لا يمكنك إضافة أو تعديل معاملات هنا بعد.',
-      tabTransactions:'المعاملات', tabNumbers:'الأرقام', tabPdf:'تصدير PDF', tabSettings:'الإعدادات',
+      tabTransactions:'المعاملات', tabMonthly:'الشهري', tabNumbers:'الأرقام', tabPdf:'تصدير PDF', tabSettings:'الإعدادات',
       searchNumber:'ابحث عن رقم…', allTypes:'كل الأنواع', received:'مستلم', paid:'مدفوع', allApps:'كل التطبيقات',
-      fromDate:'من', toDate:'إلى', clearFilters:'مسح الفلاتر', txCount:function(n){return n+' معاملة';},
+      fromDate:'من', toDate:'إلى', fromDay:'من يوم', toDay:'إلى يوم', clearFilters:'مسح الفلاتر', txCount:function(n){return n+' معاملة';},
       noTransactions:'لا توجد معاملات', adjustFilters:'عدّل الفلاتر، أو اضغط على + لإضافة معاملة',
       allNumbers:'كل الأرقام', noNumbersYet:'لا يوجد أي رقم بعد', addFirstPayment:'اضغط على + لتسجيل أول دفعة',
       netBalance:'الرصيد الصافي (مستلم − مدفوع)', netTotal:'الصافي', history:'السجل',
@@ -567,9 +619,9 @@
       colDate:'التاريخ', colNumber:'الرقم', colApp:'التطبيق', colType:'النوع', colAmount:'المبلغ', colNote:'ملاحظة' },
     fr: { dir:'ltr', appTitle:'Livre des Paiements', connecting:'Connexion…', connected:'Connecté', connError:'Erreur de connexion', noStorage:'Stockage indisponible dans cet aperçu',
       readonlyNote:"Vous pouvez consulter les données, mais pas encore ajouter ou modifier d'entrées ici.",
-      tabTransactions:'Transactions', tabNumbers:'Numéros', tabPdf:'Export PDF', tabSettings:'Réglages',
+      tabTransactions:'Transactions', tabMonthly:'Mensuel', tabNumbers:'Numéros', tabPdf:'Export PDF', tabSettings:'Réglages',
       searchNumber:'Rechercher un numéro…', allTypes:'Tous types', received:'Reçu', paid:'Payé', allApps:'Toutes apps',
-      fromDate:'Du', toDate:'Au', clearFilters:'Effacer', txCount:function(n){return n+' transaction'+(n!==1?'s':'');},
+      fromDate:'Du', toDate:'Au', fromDay:'Du jour', toDay:'Au jour', clearFilters:'Effacer', txCount:function(n){return n+' transaction'+(n!==1?'s':'');},
       noTransactions:'Aucune transaction', adjustFilters:"Ajustez les filtres, ou appuyez sur + pour en ajouter une",
       allNumbers:'Tous les numéros', noNumbersYet:"Aucun numéro pour l'instant", addFirstPayment:'Appuyez sur + pour enregistrer votre premier paiement',
       netBalance:'Solde net (reçu − payé)', netTotal:'Net', history:'Historique',
@@ -595,9 +647,9 @@
       colDate:'Date', colNumber:'Numéro', colApp:'Application', colType:'Type', colAmount:'Montant', colNote:'Note' },
     en: { dir:'ltr', appTitle:'Payment Ledger', connecting:'Connecting…', connected:'Connected', connError:'Connection error', noStorage:'Storage unavailable in this preview',
       readonlyNote:"You can view the data, but you can't add or edit entries here yet.",
-      tabTransactions:'Transactions', tabNumbers:'Numbers', tabPdf:'PDF Export', tabSettings:'Settings',
+      tabTransactions:'Transactions', tabMonthly:'Monthly', tabNumbers:'Numbers', tabPdf:'PDF Export', tabSettings:'Settings',
       searchNumber:'Search a number…', allTypes:'All types', received:'Received', paid:'Paid', allApps:'All apps',
-      fromDate:'From', toDate:'To', clearFilters:'Clear filters', txCount:function(n){return n+' transaction'+(n!==1?'s':'');},
+      fromDate:'From', toDate:'To', fromDay:'From day', toDay:'To day', clearFilters:'Clear filters', txCount:function(n){return n+' transaction'+(n!==1?'s':'');},
       noTransactions:'No transactions', adjustFilters:'Adjust the filters, or tap + to add one',
       allNumbers:'All numbers', noNumbersYet:'No numbers yet', addFirstPayment:'Tap + to log your first payment',
       netBalance:'Net balance (received − paid)', netTotal:'Net', history:'History',
@@ -688,12 +740,14 @@
     populateTypeOptions($('txfType'), true); populateAppOptions($('txfApp'), true);
     populateTypeOptions($('dfType'), true); populateAppOptions($('dfApp'), true);
     populateTypeOptions($('pfType'), true); populateAppOptions($('pfApp'), true);
+    populateTypeOptions($('mfType'), true); populateAppOptions($('mfApp'), true);
     populateAppOptions($('mApp'), false);
     document.title = t('appTitle');
     $('connText').textContent = t(connKey);
     renderTxTab(); renderNumbersList();
     if (currentPhone && numbersData[currentPhone]) { refreshDetailHeader(numbersData[currentPhone]); renderDetailTx(lastDetailRows); }
     renderPdfCount();
+    renderMonthTab();
     ['langAr','langFr','langEn'].forEach((id) => $(id).classList.remove('active'));
     $('lang' + lang[0].toUpperCase() + lang.slice(1)).classList.add('active');
     updateAuthUI();
@@ -834,19 +888,21 @@
     if (unsubAllTx) unsubAllTx();
     unsubAllTx = txCol().orderBy('date', 'desc').limit(500).onSnapshot((snap) => {
       allTx = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      renderTxTab(); renderPdfCount();
+      renderTxTab(); renderPdfCount(); renderMonthTab();
     }, () => setConn(false, t('connError')));
   }
 
   $('tabTx').addEventListener('click', () => switchTab('tx'));
+  $('tabMonthly').addEventListener('click', () => switchTab('monthly'));
   $('tabNums').addEventListener('click', () => switchTab('nums'));
   $('tabPdf').addEventListener('click', () => switchTab('pdf'));
   $('tabSettings').addEventListener('click', () => switchTab('settings'));
   function switchTab(tab) {
     if (tab !== 'nums' && currentPhone) { leaveNumberDetail(); }
     if (tab !== 'settings') { $('resetPwMsg').classList.remove('show'); }
-    ['tx','nums','pdf','settings'].forEach((k) => $('tab' + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', k === tab));
+    ['tx','monthly','nums','pdf','settings'].forEach((k) => $('tab' + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', k === tab));
     $('txTabView').style.display = tab === 'tx' ? 'block' : 'none';
+    $('monthlyTabView').style.display = tab === 'monthly' ? 'block' : 'none';
     $('numsTabView').style.display = tab === 'nums' ? 'block' : 'none';
     $('pdfTabView').style.display = tab === 'pdf' ? 'block' : 'none';
     $('settingsTabView').style.display = tab === 'settings' ? 'block' : 'none';
@@ -865,11 +921,23 @@
     rows.forEach((r) => { if (r.type === 'receive') received += (r.amount || 0); else paid += (r.amount || 0); });
     return { received, paid, net: received - paid };
   }
+  function fitText(el) {
+    if (!el) return;
+    el.style.fontSize = '';
+    const cs = getComputedStyle(el);
+    let size = parseFloat(cs.fontSize);
+    const maxWidth = el.parentElement.clientWidth * (parseFloat(cs.maxWidth) / 100 || 0.7);
+    while (el.scrollWidth > maxWidth && size > 12) {
+      size -= 1;
+      el.style.fontSize = size + 'px';
+    }
+  }
   function paintSums(prefix, rows) {
     const s = computeSums(rows);
     $(prefix + 'Received').textContent = fmt(s.received);
     $(prefix + 'Paid').textContent = fmt(s.paid);
     $(prefix + 'Net').textContent = (s.net >= 0 ? '+' : '') + fmt(s.net);
+    [$(prefix + 'Received'), $(prefix + 'Paid'), $(prefix + 'Net')].forEach(fitText);
   }
   function currentTxFilters() { return { number: sanitizeId($('txfNumber').value), type: $('txfType').value, app: $('txfApp').value, from: $('txfFrom').value, to: $('txfTo').value }; }
   function moreFooterHtml(remaining) {
@@ -1211,7 +1279,63 @@
     finally { $('confirmDeleteBtn').textContent = t('confirmDelete'); }
   });
 
+  // ===== MONTHLY TAB =====
+  const MONTH_NAMES = {
+    ar: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
+    fr: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+    en: ['January','February','March','April','May','June','July','August','September','October','November','December']
+  };
+  const today0 = new Date();
+  let monthState = { year: today0.getFullYear(), month: today0.getMonth() };
+
+  function monthLabel() { return MONTH_NAMES[lang][monthState.month] + ' ' + monthState.year; }
+  function daysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
+  function currentMonthFilters() {
+    const lastDay = daysInMonth(monthState.year, monthState.month);
+    const dayFromRaw = parseInt($('mfDayFrom').value, 10);
+    const dayToRaw = parseInt($('mfDayTo').value, 10);
+    const dayFrom = (dayFromRaw >= 1 && dayFromRaw <= 31) ? Math.min(dayFromRaw, lastDay) : 1;
+    const dayTo = (dayToRaw >= 1 && dayToRaw <= 31) ? Math.min(dayToRaw, lastDay) : lastDay;
+    const ym = monthState.year + '-' + pad2(monthState.month + 1);
+    return {
+      number: sanitizeId($('mfNumber').value), type: $('mfType').value, app: $('mfApp').value,
+      from: ym + '-' + pad2(Math.min(dayFrom, dayTo)), to: ym + '-' + pad2(Math.max(dayFrom, dayTo))
+    };
+  }
+  function renderMonthTab() {
+    $('mMonthLabel').textContent = monthLabel();
+    $('mExportLabel').textContent = t('exportBtn') + ' — ' + monthLabel();
+    const f = currentMonthFilters();
+    const rows = allTx.filter((r) => matchesFilters(r, f));
+    paintSums('mSum', rows);
+    $('mCount').textContent = t('txCount', rows.length);
+    if (rows.length === 0) { $('mList').innerHTML = ''; $('mEmpty').style.display = 'block'; return; }
+    $('mEmpty').style.display = 'none';
+    $('mList').innerHTML = rows.slice(0, 7).map(rowHtml).join('') + moreFooterHtml(rows.length - 7);
+    $('mList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, allTx.find(r => r.id === el.dataset.id))));
+  }
+  $('mPrevBtn').addEventListener('click', () => {
+    monthState.month--; if (monthState.month < 0) { monthState.month = 11; monthState.year--; }
+    renderMonthTab();
+  });
+  $('mNextBtn').addEventListener('click', () => {
+    monthState.month++; if (monthState.month > 11) { monthState.month = 0; monthState.year++; }
+    renderMonthTab();
+  });
+  $('mfNumber').addEventListener('input', renderMonthTab);
+  $('mfType').addEventListener('change', renderMonthTab);
+  $('mfApp').addEventListener('change', renderMonthTab);
+  $('mfDayFrom').addEventListener('input', renderMonthTab);
+  $('mfDayTo').addEventListener('input', renderMonthTab);
+  $('mfClear').addEventListener('click', () => {
+    $('mfNumber').value = ''; $('mfType').value = ''; $('mfApp').value = ''; $('mfDayFrom').value = ''; $('mfDayTo').value = '';
+    renderMonthTab();
+  });
+  $('mExportBtn').addEventListener('click', () => exportFilteredPdf(currentMonthFilters()));
+
   // ===== PDF TAB =====
+
+
   function currentPdfFilters() { return { number: sanitizeId($('pfNumber').value), type: $('pfType').value, app: $('pfApp').value, from: $('pfFrom').value, to: $('pfTo').value }; }
   function renderPdfCount() {
     const f = currentPdfFilters();
@@ -1231,8 +1355,7 @@
   $('pfFrom').addEventListener('change', renderPdfCount);
   $('pfTo').addEventListener('change', renderPdfCount);
 
-  $('pfExportBtn').addEventListener('click', () => {
-    const f = currentPdfFilters();
+  function exportFilteredPdf(f) {
     const rows = allTx.filter((r) => matchesFilters(r, f)).sort((a,b) => (a.date||'').localeCompare(b.date||''));
     const filterParts = [];
     if (f.number) filterParts.push(t('phoneNumber') + ': ' + f.number);
@@ -1286,7 +1409,8 @@
     }
 
     openPdfDoc({ titleHtml, subHtml, genStr, filtersTxt, bodyHtml });
-  });
+  }
+  $('pfExportBtn').addEventListener('click', () => exportFilteredPdf(currentPdfFilters()));
 
   // Opens the export as a standalone document in its own real browser tab —
   // own <html dir>, own font load, nothing from the live app underneath to
