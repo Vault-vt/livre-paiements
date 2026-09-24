@@ -115,7 +115,6 @@
   .tx-tag { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 700; }
   .tx-tag.receive { background: var(--received-soft); color: var(--received); }
   .tx-tag.pay { background: var(--paid-soft); color: var(--paid); }
-  .list-more-note { text-align: center; padding: 10px 4px; font-size: 11.5px; font-weight: 700; color: var(--ink-faint); border-top: 1px solid var(--line); }
 
   .fab { position: fixed; inset-inline-end: 18px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); border: none; font-size: 27px; box-shadow: var(--shadow); cursor: pointer; z-index: 30; display: flex; align-items: center; justify-content: center; line-height: 1; }
   .modal-backdrop { position: fixed; inset: 0; background: rgba(10,11,15,0.5); z-index: 40; display: none; align-items: flex-end; justify-content: center; }
@@ -927,9 +926,6 @@
     [$(prefix + 'Received'), $(prefix + 'Paid'), $(prefix + 'Net')].forEach(fitText);
   }
   function currentTxFilters() { return { number: sanitizeId($('txfNumber').value), type: $('txfType').value, app: $('txfApp').value, from: $('txfFrom').value, to: $('txfTo').value }; }
-  function moreFooterHtml(remaining) {
-    return remaining > 0 ? `<div class="list-more-note">+ ${remaining} ${t('more')}</div>` : '';
-  }
   function renderTxTab() {
     const f = currentTxFilters();
     const rows = allTx.filter((r) => matchesFilters(r, f));
@@ -937,7 +933,7 @@
     paintSums('txSum', rows);
     if (rows.length === 0) { $('txAllList').innerHTML = ''; $('txEmpty').style.display = 'block'; return; }
     $('txEmpty').style.display = 'none';
-    $('txAllList').innerHTML = rows.slice(0, 7).map(rowHtml).join('') + moreFooterHtml(rows.length - 7);
+    $('txAllList').innerHTML = rows.map(rowHtml).join('');
     $('txAllList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, allTx.find(r => r.id === el.dataset.id))));
   }
   function rowHtml(r) {
@@ -1018,7 +1014,7 @@
     $('detCount').textContent = t('txCount', filtered.length);
     if (filtered.length === 0) { $('txList').innerHTML = ''; $('txDetailEmpty').style.display = 'block'; return; }
     $('txDetailEmpty').style.display = 'none';
-    $('txList').innerHTML = filtered.slice(0, 7).map((r) => {
+    $('txList').innerHTML = filtered.map((r) => {
       const isReceive = r.type === 'receive';
       return `<div class="tx-row" data-id="${r.id}">
         <div class="tx-left">
@@ -1029,7 +1025,7 @@
         </div>
         <div class="tx-right"><div class="tx-amt mono ${isReceive ? 'receive' : 'pay'}">${isReceive ? '+' : '−'}${fmt(r.amount || 0)}</div><span class="tx-chevron">${CHEVRON}</span></div>
       </div>`;
-    }).join('') + moreFooterHtml(filtered.length - 7);
+    }).join('');
     $('txList').querySelectorAll('.tx-row').forEach((el) => el.addEventListener('click', () => openViewTx(el.dataset.id, filtered.find(r => r.id === el.dataset.id))));
   }
   $('dfType').addEventListener('change', () => renderDetailTx(lastDetailRows));
@@ -1335,7 +1331,7 @@
       return;
     }
     $('pfPreviewEmpty').style.display = 'none';
-    $('pfPreviewList').innerHTML = rows.slice(0, 7).map(rowHtml).join('') + moreFooterHtml(rows.length - 7);
+    $('pfPreviewList').innerHTML = rows.map(rowHtml).join('');
   }
   $('pfNumber').addEventListener('input', renderPdfCount);
   $('pfType').addEventListener('change', renderPdfCount);
