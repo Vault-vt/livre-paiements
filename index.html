@@ -81,7 +81,7 @@
   .num-card .left { min-width: 0; }
   .num-card .phone { font-weight: 700; font-size: 14.5px; }
   .num-card .label { color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
-  .num-card .right { text-align: end; flex-shrink: 0; margin-inline-start: 12px; }
+  .num-card .right { text-align: end; flex-shrink: 0; margin-inline-start: 12px; max-width: 55%; min-width: 0; }
   .balance { font-weight: 800; font-size: 16px; max-width: 100%; white-space: nowrap; overflow: hidden; display: block; }
   .balance.pos { color: var(--received); } .balance.neg { color: var(--paid); } .balance.zero { color: var(--ink-faint); }
   .num-card .when { color: var(--ink-faint); font-size: 11px; margin-top: 2px; }
@@ -171,7 +171,7 @@
   .summary-stack { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
   .summary-card-full { border-radius: 14px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
   .summary-card-full .lbl { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
-  .summary-card-full .amt { font-weight: 800; font-size: 22px; max-width: 70%; white-space: nowrap; overflow: hidden; }
+  .summary-card-full .amt { font-weight: 800; font-size: 22px; max-width: 70%; min-width: 0; white-space: nowrap; overflow: hidden; }
   .summary-card-full.received { background: var(--received-soft); } .summary-card-full.received .amt { color: var(--received); }
   .summary-card-full.paid { background: var(--paid-soft); } .summary-card-full.paid .amt { color: var(--paid); }
   .summary-card-full.net { background: var(--accent-soft); } .summary-card-full.net .amt { color: var(--accent); }
@@ -903,13 +903,20 @@
     rows.forEach((r) => { if (r.type === 'receive') received += (r.amount || 0); else paid += (r.amount || 0); });
     return { received, paid, net: received - paid };
   }
-  function fitText(el) {
+  function fitText(el, floor) {
     if (!el) return;
-    el.style.fontSize = '';
+    el.style.fontSize = ''; el.style.whiteSpace = 'nowrap'; el.style.wordBreak = 'normal';
     let size = parseFloat(getComputedStyle(el).fontSize);
-    while (el.scrollWidth > el.clientWidth && size > 11) {
+    const min = floor || 11;
+    while (el.scrollWidth > el.clientWidth && size > min) {
       size -= 1;
       el.style.fontSize = size + 'px';
+    }
+    // still doesn't fit on one line even at the smallest readable size —
+    // wrap to a second line instead of clipping or shrinking further
+    if (el.scrollWidth > el.clientWidth) {
+      el.style.whiteSpace = 'normal';
+      el.style.wordBreak = 'break-all';
     }
   }
   function paintSums(prefix, rows) {
@@ -1433,7 +1440,7 @@
   .pdf-card.received { background: #E4F5EE; } .pdf-card.received .val { color: #12805C; }
   .pdf-card.paid { background: #FBEAE6; } .pdf-card.paid .val { color: #C4432B; }
   .pdf-card.net { background: #E9EEFC; } .pdf-card.net .val { color: #2452C8; }
-  .pdf-card .val { font-size: 19px; font-weight: 800; max-width: 65%; white-space: nowrap; overflow: hidden; }
+  .pdf-card .val { font-size: 19px; font-weight: 800; max-width: 65%; min-width: 0; white-space: nowrap; overflow: hidden; }
   .pdf-card .lbl { font-size: 12px; color: #676B76; font-weight: bold; }
   .print-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .print-table th { background: #14161C; color: #fff; padding: 8px 9px; text-align: start; font-weight: bold; }
